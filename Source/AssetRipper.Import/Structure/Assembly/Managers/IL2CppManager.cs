@@ -124,7 +124,8 @@ public sealed class IL2CppManager : BaseManager
 				catch (Exception ex)
 				{
 					failures.Add(ex);
-					Logger.Warning(LogCategory.Import, $"Il2Cpp initialization failed for '{Path.GetFileName(binaryPath)}' with Unity {input.UnityVersion}: {ex.GetType().Name}: {ex.Message}");
+					string shortPath = $"{Path.GetFileName(Path.GetDirectoryName(binaryPath))}/{Path.GetFileName(binaryPath)}";
+					Logger.Warning(LogCategory.Import, $"Il2Cpp initialization failed for '{shortPath}' with Unity {input.UnityVersion}: {ex.GetType().Name}: {ex.Message}");
 					TryResetCpp2Il();
 				}
 			}

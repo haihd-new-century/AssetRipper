@@ -214,7 +214,7 @@ Time: 00:00:02.4 | Memory: 548 MB | Managed heap peak: 112 MB | Warnings: 2 | Er
 	<tr><td>2</td><td>Phục hồi asset khi type tree lệch</td><td><span class="badge ok">Hoàn thành</span></td><td>Tạo lại được <code>ProjectSettings.asset</code> cho Unity 6000.3.26 (trước đây bị thiếu); có test với fixture thật</td></tr>
 	<tr><td>3</td><td>Cảnh báo dữ liệu TPK cũ hơn game</td><td><span class="badge ok">Hoàn thành</span></td><td>Log: <em>“Unity 6000.3.26f1 is newer than the embedded type tree data…”</em></td></tr>
 	<tr><td>4</td><td>Thêm nguồn xác định phiên bản Unity</td><td><span class="badge ok">Hoàn thành</span></td><td>Thứ tự nguồn: platform → file game → Cpp2IL</td></tr>
-	<tr><td>5</td><td>Cpp2IL thử lại, không mất toàn bộ script</td><td><span class="badge ok">Hoàn thành</span></td><td>Thử mọi tổ hợp binary × phiên bản; nếu hết cách thì báo <code>AggregateException</code> rõ ràng</td></tr>
+	<tr><td>5</td><td>Cpp2IL thử lại, không mất toàn bộ script</td><td><span class="badge ok">Hoàn thành</span></td><td>Đã kiểm chứng: <code>arm64-v8a/libil2cpp.so</code> bị hỏng → tự chuyển sang <code>armeabi-v7a</code>, script vẫn khôi phục được (<code>score = 42</code>)</td></tr>
 	<tr><td>6</td><td>Chọn ABI Android theo thứ tự ưu tiên</td><td><span class="badge ok">Hoàn thành</span></td><td>Log: <em>Using IL2CPP binary 'arm64-v8a/libil2cpp.so'</em>; test thứ tự</td></tr>
 	<tr><td>7</td><td>Hook tiền xử lý metadata/binary</td><td><span class="badge ok">Hoàn thành</span></td><td>Log: <em>IL2CPP metadata header OK (format version 39)</em></td></tr>
 	<tr><td>8</td><td>Khôi phục giá trị khởi tạo field</td><td><span class="badge ok">Hoàn thành</span></td><td><code>public int score = 42;</code>, <code>hp = 100</code> (khôi phục 6 field trong 2 type)</td></tr>
@@ -242,6 +242,8 @@ Time: 00:00:02.4 | Memory: 548 MB | Managed heap peak: 112 MB | Warnings: 2 | Er
 
 <h3 id="f5"><span class="feature-id">#5</span>Cpp2IL thử lại, không mất toàn bộ script</h3>
 <p>Với mỗi binary ứng viên (<code>Il2CppGameAssemblyCandidates</code>) và mỗi phiên bản ứng viên, IL2CppManager chạy tiền xử lý rồi gọi <code>InitializeLibCpp2Il(byte[], byte[])</code>. Nếu lỗi thì reset trạng thái Cpp2IL và thử tổ hợp tiếp theo. Khi mọi tổ hợp đều thất bại mới chuyển sang <code>BaseManager</code>, với thông báo nêu rõ số tổ hợp đã thử.</p>
+<pre><code>Import [Warning] : Il2Cpp initialization failed for 'arm64-v8a/libil2cpp.so' with Unity 6000.3.26f1: LibCpp2ILInitializationException: …
+Import : Il2Cpp initialization succeeded with '…/lib/armeabi-v7a/libil2cpp.so' and Unity 6000.3.26f1 after 1 failed attempt(s).</code></pre>
 
 <h3 id="f6"><span class="feature-id">#6</span>Chọn ABI Android theo thứ tự ưu tiên</h3>
 <p>Thứ tự: <code>arm64-v8a → armeabi-v7a → x86_64 → x86 → armeabi</code>. Kết quả không còn phụ thuộc thứ tự liệt kê file của hệ thống, và mọi binary tìm được đều được giữ lại làm phương án dự phòng cho #5.</p>
