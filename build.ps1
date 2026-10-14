@@ -38,12 +38,18 @@ function Invoke-Checked([string]$File, [string[]]$Arguments, [string]$WorkDir = 
 
 $Root       = $PSScriptRoot
 $ProjectDir = Join-Path $Root 'Source/AssetRipper.GUI.Free'
-$IsWin      = $IsWindows -or ($PSVersionTable.PSEdition -eq 'Desktop')
+# $IsWindows/$IsMacOS/$IsLinux only exist in PowerShell 6+; Windows PowerShell 5.1 (Desktop) is always Windows.
+$IsDesktopPS = $PSVersionTable.PSEdition -eq 'Desktop'
+$OnWindows   = $IsDesktopPS -or ((Test-Path Variable:IsWindows) -and $IsWindows)
+$OnMacOS     = (-not $IsDesktopPS) -and (Test-Path Variable:IsMacOS) -and $IsMacOS
+$OnLinux     = (-not $IsDesktopPS) -and (Test-Path Variable:IsLinux) -and $IsLinux
+$IsWin       = $OnWindows
 $Exe        = if ($IsWin) { 'AssetRipper.GUI.Free.exe' } else { 'AssetRipper.GUI.Free' }
 
 if (-not $Runtime) {
-    $arch = [System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture.ToString().ToLower()
-    $os   = if ($IsMacOS) { 'osx' } elseif ($IsLinux) { 'linux' } else { 'win' }
+    try { $arch = [System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture.ToString().ToLower() }
+    catch { $arch = if ($env:PROCESSOR_ARCHITECTURE -eq 'ARM64') { 'arm64' } else { 'x64' } }  # old .NET Framework
+    $os   = if ($OnMacOS) { 'osx' } elseif ($OnLinux) { 'linux' } else { 'win' }
     $Runtime = "$os-$arch"
 }
 
@@ -58,7 +64,7 @@ $dotnetRoot = Split-Path ((& $Dotnet --list-sdks | Select-Object -Last 1) -repla
 Write-Host "dotnet SDK: $sdk ($dotnetRoot)"
 $extraPublishArgs = @()
 $linkerTargets = $null
-if (-not $NoAot -and $IsMacOS) {
+if (-not $NoAot -and $OnMacOS) {
     & xcode-select -p *> $null
     if ($LASTEXITCODE -ne 0) { throw "Native AOT needs Xcode Command Line Tools: run 'xcode-select --install' (or use -NoAot)" }
 
@@ -85,6 +91,14 @@ if (-not $NoAot -and $IsMacOS) {
         Write-Host 'Using classic Apple linker (-ld_classic); disable with -NoClassicLinker'
     }
 }
+if (-not $NoAot -and $OnWindows) {
+    $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
+    $vc = if (Test-Path $vswhere) { & $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath } else { $null }
+    if (-not $vc) {
+        throw "Native AOT on Windows needs Visual Studio (or Build Tools) with the 'Desktop development with C++' workload. Install it, or use -NoAot."
+    }
+    Write-Host "MSVC tools: $vc"
+}
 Write-Host "Runtime: $Runtime | Config: $Config | Native AOT: $(-not $NoAot)"
 
 if ($Clean) {
@@ -107,8 +121,8 @@ $Out = Join-Path $Root "Source/0Bins/AssetRipper.GUI.Free/$Config/$Runtime/publi
 $ExePath = Join-Path $Out $Exe
 if (-not (Test-Path $ExePath)) { throw "publish finished but $ExePath was not found" }
 (Get-Date).ToUniversalTime().ToString('ddd MMM dd HH:mm:ss UTC yyyy') | Set-Content (Join-Path $Out 'compile_time.txt')
-if ($IsMacOS -or $IsLinux) { & chmod +x $ExePath }
-if ($IsMacOS) { & xattr -dr com.apple.quarantine $Out 2>$null }
+if ($OnMacOS -or $OnLinux) { & chmod +x $ExePath }
+if ($OnMacOS) { & xattr -dr com.apple.quarantine $Out 2>$null }
 
 if ($Archive) {
     Step 'Creating archive'
