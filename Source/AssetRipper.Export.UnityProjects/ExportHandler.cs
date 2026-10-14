@@ -88,6 +88,7 @@ public class ExportHandler
 		}
 		yield return new RemoveAssemblyKeyFileAttributeProcessor();
 		yield return new InternalsVisibileToPublicKeyRemover();
+		yield return new FieldInitializerRecoveryProcessor(Settings.ImportSettings.ScriptContentLevel);
 
 		// Asset processors
 		yield return new SceneDefinitionProcessor();
