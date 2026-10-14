@@ -20,6 +20,24 @@ public class FullConfiguration : CoreConfiguration
 		set => SingletonData.SetStoredValue(nameof(ExportSettings), value);
 	}
 
+	/// <summary>
+	/// Restricts which assets are written during export. Empty by default (everything is exported).
+	/// </summary>
+	public ExportFilter ExportFilter
+	{
+		get => SingletonData.GetStoredValue<ExportFilter>(nameof(ExportFilter));
+		set => SingletonData.SetStoredValue(nameof(ExportFilter), value);
+	}
+
+	/// <summary>
+	/// User supplied export destinations for individual assets. Empty by default.
+	/// </summary>
+	public AssetPathOverrides AssetPathOverrides
+	{
+		get => SingletonData.GetStoredValue<AssetPathOverrides>(nameof(AssetPathOverrides));
+		set => SingletonData.SetStoredValue(nameof(AssetPathOverrides), value);
+	}
+
 	public bool SaveSettingsToDisk => ExportSettings.SaveSettingsToDisk;
 
 	public string? LanguageCode
@@ -33,6 +51,8 @@ public class FullConfiguration : CoreConfiguration
 		SingletonData.Add(nameof(ProcessingSettings), new JsonDataInstance<ProcessingSettings>(SerializedSettingsContext.Default.ProcessingSettings));
 		SingletonData.Add(nameof(ExportSettings), new JsonDataInstance<ExportSettings>(SerializedSettingsContext.Default.ExportSettings));
 		SingletonData.Add(nameof(EngineResourceData), new JsonDataInstance<EngineResourceData?>(EngineResourceDataContext.Default.NullableEngineResourceData));
+		SingletonData.Add(nameof(ExportFilter), new JsonDataInstance<ExportFilter>(ExportFilterContext.Default.ExportFilter));
+		SingletonData.Add(nameof(AssetPathOverrides), new JsonDataInstance<AssetPathOverrides>(AssetPathOverridesContext.Default.AssetPathOverrides));
 	}
 
 	public override void LogConfigurationValues()

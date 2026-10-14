@@ -10,6 +10,7 @@ using AssetRipper.Processing;
 using AssetRipper.Processing.AnimatorControllers;
 using AssetRipper.Processing.Assemblies;
 using AssetRipper.Processing.AudioMixers;
+using AssetRipper.Processing.Configuration;
 using AssetRipper.Processing.Editor;
 using AssetRipper.Processing.Prefabs;
 using AssetRipper.Processing.Scenes;
@@ -90,6 +91,7 @@ public class ExportHandler
 		yield return new PrefabProcessor();
 		yield return new SpriteProcessor();
 		yield return new ScriptableObjectProcessor();
+		yield return new AssetPathOverrideProcessor(Settings.AssetPathOverrides);
 	}
 
 	public void Export(GameData gameData, string outputPath, FileSystem fileSystem)
@@ -103,6 +105,11 @@ public class ExportHandler
 		Settings.SetProjectSettings(gameData.ProjectVersion);
 
 		ProjectExporter projectExporter = new(Settings, gameData.AssemblyManager);
+		if (!Settings.ExportFilter.IsEmpty)
+		{
+			Logger.Info(LogCategory.Export, $"Export filter: {Settings.ExportFilter}");
+			projectExporter.AssetFilter = Settings.ExportFilter.Allows;
+		}
 		BeforeExport(projectExporter);
 		projectExporter.DoFinalOverrides(Settings);
 		projectExporter.Export(gameData.GameBundle, Settings, fileSystem);

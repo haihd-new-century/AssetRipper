@@ -1,4 +1,4 @@
-using AssetRipper.Assets;
+﻿using AssetRipper.Assets;
 using AssetRipper.Assets.Bundles;
 using AssetRipper.Export.Configuration;
 using AssetRipper.Export.PrimaryContent.Audio;
@@ -126,6 +126,13 @@ public sealed class PrimaryContentExporter
 	public void Export(GameBundle fileCollection, FullConfiguration settings, FileSystem fileSystem)
 	{
 		List<ExportCollectionBase> collections = CreateCollections(fileCollection);
+		ExportFilter filter = settings.ExportFilter;
+		if (!filter.IsEmpty)
+		{
+			int before = collections.Count;
+			collections.RemoveAll(c => !c.Assets.Any(filter.Allows));
+			Logger.Info(LogCategory.Export, $"Export filter: {filter} ({before - collections.Count} collection(s) skipped)");
+		}
 
 		for (int i = 0; i < collections.Count; i++)
 		{

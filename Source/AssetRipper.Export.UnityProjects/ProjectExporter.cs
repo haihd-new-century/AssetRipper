@@ -16,6 +16,14 @@ public sealed partial class ProjectExporter
 
 	private readonly ObjectHandlerStack<IAssetExporter> assetExporterStack = new();
 
+	/// <summary>
+	/// If set, only collections containing at least one asset accepted by this predicate are written.
+	/// </summary>
+	/// <remarks>
+	/// Filtered collections are still registered with the container, so references to them keep stable GUIDs.
+	/// </remarks>
+	public Func<IUnityObjectBase, bool>? AssetFilter { get; set; }
+
 	/// <summary>Adds an exporter to the stack of exporters for this asset type.</summary>
 	/// <typeparam name="T">The c sharp type of this asset type. Any inherited types also get this exporter.</typeparam>
 	/// <param name="exporter">The new exporter. If it doesn't work, the next one in the stack is used.</param>
@@ -80,14 +88,19 @@ public sealed partial class ProjectExporter
 
 		EventExportStarted?.Invoke();
 		ProjectAssetContainer container = new ProjectAssetContainer(this, options, fileCollection.FetchAssets(), collections);
-		int exportableCount = collections.Count(c => c.Exportable);
+		int exportableCount = collections.Count(c => c.Exportable && PassesFilter(c));
+		int skippedByFilter = collections.Count(c => c.Exportable) - exportableCount;
+		if (skippedByFilter > 0)
+		{
+			Logger.Info(LogCategory.Export, $"{skippedByFilter} collection(s) skipped by the export filter");
+		}
 		int currentExportable = 0;
 
 		for (int i = 0; i < collections.Count; i++)
 		{
 			IExportCollection collection = collections[i];
 			container.CurrentCollection = collection;
-			if (collection.Exportable)
+			if (collection.Exportable && PassesFilter(collection))
 			{
 				currentExportable++;
 				Logger.Info(LogCategory.ExportProgress, $"({currentExportable}/{exportableCount}) Exporting '{collection.Name}'");
@@ -100,6 +113,11 @@ public sealed partial class ProjectExporter
 			EventExportProgressUpdated?.Invoke(i, collections.Count);
 		}
 		EventExportFinished?.Invoke();
+	}
+
+	private bool PassesFilter(IExportCollection collection)
+	{
+		return AssetFilter is null || collection.Assets.Any(AssetFilter);
 	}
 
 	private List<IExportCollection> CreateCollections(GameBundle fileCollection)

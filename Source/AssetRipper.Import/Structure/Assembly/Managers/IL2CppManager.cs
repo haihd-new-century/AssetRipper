@@ -150,6 +150,10 @@ public sealed class IL2CppManager : BaseManager
 
 		Add(gameStructure.Version, "the platform structure");
 		Add(gameStructure.TryGetUnityVersionFromGameFiles(), "the game files");
+		if (result.Count > 0)
+		{
+			return result;
+		}
 		try
 		{
 			Add(Cpp2IlApi.DetermineUnityVersion(UnityPlayerPath, GameDataPath), "Cpp2IL");
