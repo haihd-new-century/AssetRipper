@@ -13,6 +13,8 @@
       href: CommonIssues.md
     - name: Running on Mac
       href: RunningOnMac.md
+    - name: Building on Mac
+      href: BuildingOnMac.md
     - name: Premium Features
       href: PremiumFeatures.md
 
