@@ -171,12 +171,15 @@ internal sealed class BundleFileBlockReader : IDisposable
 
 	private static SmartStream CreateStream(long decompressedSize)
 	{
-		return decompressedSize switch
+		if (decompressedSize > MaxMemoryStreamLength)
 		{
-			> MaxMemoryStreamLength => SmartStream.CreateTemp(),
-			> MaxPreAllocatedMemoryStreamLength => SmartStream.CreateMemory(),
-			_ => SmartStream.CreateMemory(new byte[decompressedSize]),
-		};
+			return SmartStream.CreateTemp();
+		}
+		if (decompressedSize > MaxPreAllocatedMemoryStreamLength)
+		{
+			return SmartStream.CreateMemory();
+		}
+		return SmartStream.CreateMemory(new byte[decompressedSize]);
 	}
 
 	private static SmartStream CreateTemporaryStream(long decompressedSize, out byte[]? rentedArray)
@@ -201,14 +204,14 @@ internal sealed class BundleFileBlockReader : IDisposable
 	/// Previously, this was actually set to <see cref="int.MaxValue"/>, but that can cause
 	/// <see href="https://github.com/AssetRipper/AssetRipper/issues/1953">highly compressed games to use too much RAM</see>.
 	/// </remarks>
-	private const int MaxMemoryStreamLength = 50 * 1024 * 1024;
+	private static int MaxMemoryStreamLength => BundleMemoryOptions.MaxInMemoryDecompressedSize;
 	/// <summary>
 	/// The arbitrary maximum size of a decompressed stream to be pre-allocated. 30 MB
 	/// </summary>
 	/// <remarks>
 	/// This number can be set to any integer value less than <see cref="MaxMemoryStreamLength"/>.
 	/// </remarks>
-	private const int MaxPreAllocatedMemoryStreamLength = 30 * 1024 * 1024;
+	private static int MaxPreAllocatedMemoryStreamLength => Math.Min(BundleMemoryOptions.MaxPreAllocatedDecompressedSize, MaxMemoryStreamLength);
 	private readonly SmartStream m_stream;
 	private readonly BlocksInfo m_blocksInfo = new();
 	private readonly long m_dataOffset;

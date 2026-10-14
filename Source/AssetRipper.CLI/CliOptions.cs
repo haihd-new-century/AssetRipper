@@ -23,6 +23,8 @@ internal sealed class CliOptions
 	public bool Json { get; set; }
 	public bool Quiet { get; set; }
 	public bool Help { get; set; }
+	public bool LowMemory { get; set; }
+	public int? Threads { get; set; }
 
 	public const string Usage = """
 		AssetRipper command line interface
@@ -45,6 +47,8 @@ internal sealed class CliOptions
 		      --include-path <glob>   Only export assets whose path matches (repeatable, e.g. "Assets/Texture2D/**")
 		      --exclude-path <glob>   Do not export assets whose path matches (repeatable)
 		      --path-overrides <file> JSON file with per-asset export paths (see documentation)
+		  -j, --threads <n>           Threads for texture conversion (default: CPU count, 1 = sequential)
+		      --low-memory            Keep less data in RAM (temp files for bundles, smaller batches)
 
 		Common options:
 		      --log <file>            Also write the log to a file
@@ -138,6 +142,17 @@ internal sealed class CliOptions
 					break;
 				case "--path-overrides":
 					options.PathOverridesFile = NextValue(arg);
+					break;
+				case "-j" or "--threads":
+					string threads = NextValue(arg);
+					if (!int.TryParse(threads, out int threadCount) || threadCount < 1)
+					{
+						throw new CliUsageException($"Invalid thread count '{threads}'.");
+					}
+					options.Threads = threadCount;
+					break;
+				case "--low-memory":
+					options.LowMemory = true;
 					break;
 				case "--log":
 					options.LogFile = NextValue(arg);

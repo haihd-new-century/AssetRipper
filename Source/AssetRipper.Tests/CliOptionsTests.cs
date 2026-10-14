@@ -33,6 +33,32 @@ public class CliOptionsTests
 		}
 	}
 
+	[Test]
+	public void ThreadsAndLowMemoryAreParsed()
+	{
+		CliOptions options = CliOptions.Parse(["export", "g", "-o", "o", "-j", "3", "--low-memory"]);
+		Assert.That(options.Threads, Is.EqualTo(3));
+		Assert.That(options.LowMemory, Is.True);
+		Assert.Throws<CliUsageException>(() => CliOptions.Parse(["export", "g", "-o", "o", "-j", "0"]));
+	}
+
+	[Test]
+	public void BundleMemoryOptionsCanBeLoweredAndReset()
+	{
+		try
+		{
+			AssetRipper.IO.Files.BundleFiles.BundleMemoryOptions.UseLowMemoryLimits();
+			Assert.That(AssetRipper.IO.Files.BundleFiles.BundleMemoryOptions.MaxInMemoryDecompressedSize, Is.EqualTo(4 * 1024 * 1024));
+			AssetRipper.IO.Files.BundleFiles.BundleMemoryOptions.MaxInMemoryDecompressedSize = -5;
+			Assert.That(AssetRipper.IO.Files.BundleFiles.BundleMemoryOptions.MaxInMemoryDecompressedSize, Is.Zero);
+		}
+		finally
+		{
+			AssetRipper.IO.Files.BundleFiles.BundleMemoryOptions.Reset();
+		}
+		Assert.That(AssetRipper.IO.Files.BundleFiles.BundleMemoryOptions.MaxInMemoryDecompressedSize, Is.EqualTo(50 * 1024 * 1024));
+	}
+
 	[TestCase("")]
 	[TestCase("--help")]
 	[TestCase("export|--help")]

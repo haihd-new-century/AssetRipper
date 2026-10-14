@@ -28,6 +28,16 @@ public class ExportHandler
 		Settings = settings;
 	}
 
+	/// <summary>
+	/// Threads used to prepare CPU-heavy collections (textures) during Unity project export. 1 disables parallelism.
+	/// </summary>
+	public int MaxDegreeOfParallelism { get; set; } = Environment.ProcessorCount;
+
+	/// <summary>
+	/// Upper bound for raw texture data held in memory while preparing collections in parallel.
+	/// </summary>
+	public long PreparationMemoryBudget { get; set; } = 256L * 1024 * 1024;
+
 	public GameData Load(IReadOnlyList<string> paths, FileSystem fileSystem)
 	{
 		if (paths.Count == 1)
@@ -104,7 +114,11 @@ public class ExportHandler
 		Settings.ExportRootPath = outputPath;
 		Settings.SetProjectSettings(gameData.ProjectVersion);
 
-		ProjectExporter projectExporter = new(Settings, gameData.AssemblyManager);
+		ProjectExporter projectExporter = new(Settings, gameData.AssemblyManager)
+		{
+			MaxDegreeOfParallelism = Math.Max(1, MaxDegreeOfParallelism),
+			PreparationMemoryBudget = PreparationMemoryBudget,
+		};
 		if (!Settings.ExportFilter.IsEmpty)
 		{
 			Logger.Info(LogCategory.Export, $"Export filter: {Settings.ExportFilter}");

@@ -1,4 +1,4 @@
-using AssetRipper.Export.UnityProjects.Textures;
+﻿using AssetRipper.Export.UnityProjects.Textures;
 using AssetRipper.Import.Logging;
 using AssetRipper.SourceGenerated.Classes.ClassID_117;
 using AssetRipper.SourceGenerated.Classes.ClassID_187;
@@ -143,7 +143,18 @@ public static class TextureConverter
 
 	public static bool TryConvertToBitmap(ITexture2D texture, out DirectBitmap bitmap)
 	{
-		byte[] buffer = texture.GetImageData();
+		return TryConvertToBitmap(texture, texture.GetImageData(), out bitmap);
+	}
+
+	/// <summary>
+	/// Converts already loaded image data.
+	/// </summary>
+	/// <remarks>
+	/// This overload does not touch resource streams, so it is safe to call concurrently for different textures
+	/// once <paramref name="buffer"/> has been read (sequentially) with <c>GetImageData()</c>.
+	/// </remarks>
+	public static bool TryConvertToBitmap(ITexture2D texture, byte[] buffer, out DirectBitmap bitmap)
+	{
 		if (buffer.Length == 0)
 		{
 			bitmap = DirectBitmap.Empty;

@@ -24,6 +24,17 @@ public sealed partial class ProjectExporter
 	/// </remarks>
 	public Func<IUnityObjectBase, bool>? AssetFilter { get; set; }
 
+	/// <summary>
+	/// Maximum number of threads used to prepare CPU-heavy collections (texture decoding and encoding).
+	/// 1 disables parallel preparation.
+	/// </summary>
+	public int MaxDegreeOfParallelism { get; set; } = Environment.ProcessorCount;
+
+	/// <summary>
+	/// Upper bound for raw input data held in memory by one preparation window.
+	/// </summary>
+	public long PreparationMemoryBudget { get; set; } = 256L * 1024 * 1024;
+
 	/// <summary>Adds an exporter to the stack of exporters for this asset type.</summary>
 	/// <typeparam name="T">The c sharp type of this asset type. Any inherited types also get this exporter.</typeparam>
 	/// <param name="exporter">The new exporter. If it doesn't work, the next one in the stack is used.</param>
@@ -96,8 +107,13 @@ public sealed partial class ProjectExporter
 		}
 		int currentExportable = 0;
 
+		int preparedUntil = 0;
 		for (int i = 0; i < collections.Count; i++)
 		{
+			if (i >= preparedUntil && MaxDegreeOfParallelism > 1)
+			{
+				preparedUntil = PrepareWindow(collections, i);
+			}
 			IExportCollection collection = collections[i];
 			container.CurrentCollection = collection;
 			if (collection.Exportable && PassesFilter(collection))
@@ -113,6 +129,39 @@ public sealed partial class ProjectExporter
 			EventExportProgressUpdated?.Invoke(i, collections.Count);
 		}
 		EventExportFinished?.Invoke();
+	}
+
+	/// <summary>
+	/// Loads input for upcoming <see cref="IPreparableExportCollection"/>s sequentially, then prepares them in parallel.
+	/// </summary>
+	/// <returns>The index after the last collection in the window.</returns>
+	private int PrepareWindow(List<IExportCollection> collections, int start)
+	{
+		List<IPreparableExportCollection> window = [];
+		long bytes = 0;
+		int maxCount = Math.Max(2, MaxDegreeOfParallelism * 4);
+		int end = start;
+		for (; end < collections.Count && window.Count < maxCount && bytes < PreparationMemoryBudget; end++)
+		{
+			if (collections[end] is IPreparableExportCollection preparable && preparable.Exportable && PassesFilter(preparable))
+			{
+				long size = preparable.LoadPreparationInput();
+				if (size > 0)
+				{
+					window.Add(preparable);
+					bytes += size;
+				}
+			}
+		}
+		if (window.Count > 1)
+		{
+			Parallel.ForEach(window, new ParallelOptions { MaxDegreeOfParallelism = MaxDegreeOfParallelism }, static c => c.Prepare());
+		}
+		else if (window.Count == 1)
+		{
+			window[0].Prepare();
+		}
+		return Math.Max(end, start + 1);
 	}
 
 	private bool PassesFilter(IExportCollection collection)

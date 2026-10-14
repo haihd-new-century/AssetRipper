@@ -1,4 +1,4 @@
-using AssetRipper.Assets;
+﻿using AssetRipper.Assets;
 using AssetRipper.Assets.Generics;
 using AssetRipper.Export.Configuration;
 using AssetRipper.Export.UnityProjects.Project;
@@ -15,7 +15,7 @@ using System.Diagnostics;
 
 namespace AssetRipper.Export.UnityProjects.Textures;
 
-public class TextureExportCollection : AssetsExportCollection<ITexture2D>
+public class TextureExportCollection : AssetsExportCollection<ITexture2D>, IPreparableExportCollection
 {
 	public TextureExportCollection(TextureAssetExporter assetExporter, SpriteInformationObject spriteInformationObject, bool exportSprites)
 		: base(assetExporter, spriteInformationObject.Texture)
@@ -50,8 +50,45 @@ public class TextureExportCollection : AssetsExportCollection<ITexture2D>
 
 	protected override bool ExportInner(IExportContainer container, string filePath, string dirPath, FileSystem fileSystem)
 	{
+		byte[]? encoded = m_encoded;
+		m_encoded = null;
+		m_imageData = null;
+		if (encoded is not null)
+		{
+			return TextureAssetExporter.ExportEncoded(encoded, filePath, fileSystem);
+		}
 		return AssetExporter.Export(container, Asset, filePath, fileSystem);
 	}
+
+	long IPreparableExportCollection.LoadPreparationInput()
+	{
+		if (!m_convert || AssetExporter is not TextureAssetExporter || !Asset.CheckAssetIntegrity())
+		{
+			return 0;
+		}
+		m_imageData = Asset.GetImageData();
+		return m_imageData.Length;
+	}
+
+	void IPreparableExportCollection.Prepare()
+	{
+		byte[]? data = m_imageData;
+		if (data is { Length: > 0 } && AssetExporter is TextureAssetExporter textureExporter)
+		{
+			try
+			{
+				m_encoded = textureExporter.Encode(Asset, data);
+			}
+			catch
+			{
+				m_encoded = null; // fall back to the sequential path, which logs the failure
+			}
+		}
+		m_imageData = null;
+	}
+
+	private byte[]? m_imageData;
+	private volatile byte[]? m_encoded;
 
 	protected override string GetExportExtension(IUnityObjectBase asset)
 	{

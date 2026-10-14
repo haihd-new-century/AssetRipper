@@ -6,6 +6,7 @@ using AssetRipper.Export.UnityProjects;
 using AssetRipper.Import.AssetCreation;
 using AssetRipper.Import.Logging;
 using AssetRipper.IO.Files;
+using AssetRipper.IO.Files.BundleFiles;
 using AssetRipper.Processing;
 using AssetRipper.Processing.Configuration;
 using System.Diagnostics;
@@ -79,7 +80,15 @@ internal static class Program
 
 		FullConfiguration settings = CreateSettings(options);
 		Stopwatch stopwatch = Stopwatch.StartNew();
-		ExportHandler handler = new(settings);
+		if (options.LowMemory)
+		{
+			BundleMemoryOptions.UseLowMemoryLimits();
+		}
+		ExportHandler handler = new(settings)
+		{
+			MaxDegreeOfParallelism = options.Threads ?? (options.LowMemory ? 1 : Environment.ProcessorCount),
+			PreparationMemoryBudget = options.LowMemory ? 32L * 1024 * 1024 : 256L * 1024 * 1024,
+		};
 		string[] inputs = options.Inputs.Select(Path.GetFullPath).ToArray();
 
 		if (!options.Json)

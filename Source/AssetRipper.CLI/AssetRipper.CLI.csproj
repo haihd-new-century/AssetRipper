@@ -3,7 +3,9 @@
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
 		<AssemblyName>AssetRipper.CLI</AssemblyName>
-		<ServerGarbageCollection>true</ServerGarbageCollection>
+		<!-- Workstation GC: measured ~50% lower peak RSS than server GC for batch exports -->
+		<ServerGarbageCollection>false</ServerGarbageCollection>
+		<ConcurrentGarbageCollection>false</ConcurrentGarbageCollection>
 		<InvariantGlobalization>true</InvariantGlobalization>
 		<OutputPath>..\0Bins\AssetRipper.CLI\$(Configuration)\</OutputPath>
 		<IntermediateOutputPath>..\0Bins\obj\AssetRipper.CLI\$(Configuration)\</IntermediateOutputPath>

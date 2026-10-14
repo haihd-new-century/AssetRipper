@@ -1,4 +1,4 @@
-using AssetRipper.Assets;
+﻿using AssetRipper.Assets;
 using AssetRipper.Export.Configuration;
 using AssetRipper.Export.Modules.Textures;
 using AssetRipper.Import.Logging;
@@ -35,6 +35,31 @@ public class TextureAssetExporter : BinaryAssetExporter
 			exportCollection = null;
 			return false;
 		}
+	}
+
+	/// <summary>
+	/// Decodes <paramref name="imageData"/> and encodes it in the export format. Thread-safe for distinct textures.
+	/// </summary>
+	/// <returns>The encoded file content, or null if the texture could not be converted.</returns>
+	public byte[]? Encode(ITexture2D texture, byte[] imageData)
+	{
+		if (!TextureConverter.TryConvertToBitmap(texture, imageData, out DirectBitmap bitmap))
+		{
+			return null;
+		}
+		using MemoryStream stream = new();
+		bitmap.Save(stream, texture.GetTextureExportFormat(PreferOriginalTextureExtension, ImageExportFormat));
+		return stream.ToArray();
+	}
+
+	/// <summary>
+	/// Writes content produced by <see cref="Encode"/>.
+	/// </summary>
+	public static bool ExportEncoded(byte[] encoded, string path, FileSystem fileSystem)
+	{
+		using Stream stream = fileSystem.File.Create(path);
+		stream.Write(encoded);
+		return true;
 	}
 
 	public override bool Export(IExportContainer container, IUnityObjectBase asset, string path, FileSystem fileSystem)
