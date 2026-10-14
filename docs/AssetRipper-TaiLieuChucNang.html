@@ -98,7 +98,7 @@ footer{margin-top:60px;color:var(--muted);font-size:13px;border-top:1px solid va
 	<div class="chips">
 		<span class="chip"><b>Nền tảng</b>.NET 10 · C# · Native AOT</span>
 		<span class="chip"><b>Giấy phép</b>GPL-3.0</span>
-		<span class="chip"><b>Kiểm thử</b>597/597 đạt</span>
+		<span class="chip"><b>Kiểm thử</b>599/599 đạt</span>
 		<span class="chip"><b>Thay đổi</b>60 file · +4.712 / −318 dòng</span>
 		<span class="chip"><b>Cập nhật</b>15/10/2026</span>
 	</div>
@@ -213,7 +213,7 @@ Time: 00:00:02.4 | Memory: 548 MB | Managed heap peak: 112 MB | Warnings: 2 | Er
 	<tr><th>#</th><th>Nâng cấp</th><th>Trạng thái</th><th>Bằng chứng</th></tr>
 	<tr><td>2</td><td>Phục hồi asset khi type tree lệch</td><td><span class="badge ok">Hoàn thành</span></td><td>Tạo lại được <code>ProjectSettings.asset</code> cho Unity 6000.3.26 (trước đây bị thiếu); có test với fixture thật</td></tr>
 	<tr><td>3</td><td>Cảnh báo dữ liệu TPK cũ hơn game</td><td><span class="badge ok">Hoàn thành</span></td><td>Log: <em>“Unity 6000.3.26f1 is newer than the embedded type tree data…”</em></td></tr>
-	<tr><td>4</td><td>Thêm nguồn xác định phiên bản Unity</td><td><span class="badge ok">Hoàn thành</span></td><td>Thứ tự nguồn: platform → file game → Cpp2IL</td></tr>
+	<tr><td>4</td><td>Thêm nguồn xác định phiên bản Unity</td><td><span class="badge ok">Hoàn thành</span></td><td>Thứ tự nguồn: platform → file game → Cpp2IL; có test: cấu trúc Linux (Version = null) đọc được 6000.3.26f1 từ <code>globalgamemanagers</code></td></tr>
 	<tr><td>5</td><td>Cpp2IL thử lại, không mất toàn bộ script</td><td><span class="badge ok">Hoàn thành</span></td><td>Đã kiểm chứng: <code>arm64-v8a/libil2cpp.so</code> bị hỏng → tự chuyển sang <code>armeabi-v7a</code>, script vẫn khôi phục được (<code>score = 42</code>)</td></tr>
 	<tr><td>6</td><td>Chọn ABI Android theo thứ tự ưu tiên</td><td><span class="badge ok">Hoàn thành</span></td><td>Log: <em>Using IL2CPP binary 'arm64-v8a/libil2cpp.so'</em>; test thứ tự</td></tr>
 	<tr><td>7</td><td>Hook tiền xử lý metadata/binary</td><td><span class="badge ok">Hoàn thành</span></td><td>Log: <em>IL2CPP metadata header OK (format version 39)</em></td></tr>
@@ -353,20 +353,22 @@ Import : Il2Cpp initialization succeeded with '…/lib/armeabi-v7a/libil2cpp.so'
 <section id="ra-soat">
 <h2>11. Rà soát &amp; kiểm thử</h2>
 <div class="grid">
-	<div class="card"><h4>Unit test</h4><div class="stat">597 / 597</div><p class="muted">8 project test. Trong đó AssetRipper.Tests có 241 test (trước đây 173); 68 test mới thuộc ImportRobustness, CliOptions, ExportCustomization, FieldInitializerRecovery và StaticMeshSeparation.</p></div>
+	<div class="card"><h4>Unit test</h4><div class="stat">599 / 599</div><p class="muted">8 project test. Trong đó AssetRipper.Tests có 242 test (trước đây 173); 70 test mới thuộc ImportRobustness, CliOptions, ExportCustomization, FieldInitializerRecovery, StaticMeshSeparation và VirtualFileSystem.</p></div>
 	<div class="card"><h4>Build</h4><div class="stat">AOT ✓</div><p class="muted">Release Native AOT osx-arm64 build thành công, không phát sinh cảnh báo trim/AOT mới từ code thêm vào.</p></div>
 	<div class="card"><h4>End-to-end</h4><div class="stat">3 APK</div><p class="muted"><code>ripper.apk</code>, <code>rich.apk</code>, <code>static.apk</code> (Unity 6000.3.26f1, IL2CPP arm64): 0 lỗi, chỉ 2 cảnh báo dự kiến.</p></div>
 </div>
 <h3>Phát hiện trong quá trình rà soát và đã sửa</h3>
 <ul>
 	<li><code>SerializableStructure.Reset()</code> không có tác dụng với field primitive (đã sửa, có test).</li>
+	<li><code>VirtualFileSystem.OpenRead</code> trả về stream dùng chung vị trí đọc, nên mở file ngay sau khi ghi sẽ bắt đầu từ cuối file. Lỗi lộ ra khi viết test cho #4; đã sửa và có test.</li>
+	<li>Nhánh thử lại Cpp2IL (#5) đã được chạy thật: <code>arm64-v8a/libil2cpp.so</code> bị hỏng thì tự chuyển sang ABI tiếp theo.</li>
 	<li>FieldInitializerRecovery nạp structure của script hệ thống (GUISkin) và sinh thêm một cảnh báo; đã sửa bằng cách resolve type trước khi nạp.</li>
 	<li>Trang collection trước đây render mọi asset hai lần (lưới và bảng); giờ bảng được dựng khi cần, mỗi trang 240 mục, ảnh tải lười.</li>
 	<li>Tuỳ chọn <code>--low-memory</code> ban đầu có ép GC compaction, việc này làm RSS tăng nên đã bỏ (mức hiện tại 750 MB).</li>
 	<li>Trên macOS, <code>PeakWorkingSet64</code> luôn trả 0; CLI chuyển sang hiển thị working set hiện tại cùng đỉnh managed heap.</li>
 </ul>
 <h3>Cách tái kiểm tra</h3>
-<pre><code>dotnet test AssetRipper.slnx                         # 597 test
+<pre><code>dotnet test AssetRipper.slnx                         # 599 test
 DOTNET=$HOME/.dotnet/dotnet ./build.sh                # Native AOT
 dotnet Source/0Bins/AssetRipper.CLI/Debug/AssetRipper.CLI.dll export game.apk -o out -f --log out.log</code></pre>
 </section>

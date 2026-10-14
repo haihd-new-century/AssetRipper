@@ -154,6 +154,28 @@ public class ImportRobustnessTests
 	}
 
 	[Test]
+	public void UnityVersionIsReadFromGameFilesWhenThePlatformDoesNotKnowIt()
+	{
+		Assume.That(File.Exists(PlayerSettingsFixture), "fixture missing");
+		VirtualFileSystem fs = new();
+		const string root = "/game";
+		fs.Directory.Create(root);
+		fs.Directory.Create("/game/Game_Data");
+		fs.File.WriteAllBytes("/game/UnityPlayer.so", [0]);
+		fs.File.WriteAllBytes("/game/Game", [0]);
+		fs.File.WriteAllBytes("/game/Game_Data/globalgamemanagers", File.ReadAllBytes(PlayerSettingsFixture));
+
+		PlatformChecker.CheckPlatform([root], fs, out AssetRipper.Import.Structure.Platforms.PlatformGameStructure? platform, out _);
+
+		using (Assert.EnterMultipleScope())
+		{
+			Assert.That(platform, Is.Not.Null);
+			Assert.That(platform!.Version, Is.Null, "Linux structures do not know the version up front");
+			Assert.That(platform.TryGetUnityVersionFromGameFiles(), Is.EqualTo(UnityVersion.Parse("6000.3.26f1")));
+		}
+	}
+
+	[Test]
 	public void DefaultPreprocessorsIncludeTheMetadataDiagnostic()
 	{
 		Assert.That(IL2CppManager.InputPreprocessors.OfType<MetadataHeaderDiagnostic>(), Is.Not.Empty);

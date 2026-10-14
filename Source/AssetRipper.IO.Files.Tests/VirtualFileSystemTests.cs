@@ -222,4 +222,17 @@ public class VirtualFileSystemTests
 		IEnumerable<string> files = fs.Directory.EnumerateFiles("/", "*", SearchOption.AllDirectories);
 		Assert.That(files, Is.EquivalentTo(["/dir/deep", "/test"]));
 	}
+
+	[Test]
+	public void OpenReadAfterWriteStartsAtTheBeginning()
+	{
+		VirtualFileSystem fs = new();
+		fs.File.WriteAllBytes("/data.bin", [1, 2, 3, 4]);
+		using (AssetRipper.IO.Files.Streams.Smart.SmartStream first = fs.File.OpenRead("/data.bin"))
+		{
+			first.Position = 3;
+		}
+		using AssetRipper.IO.Files.Streams.Smart.SmartStream stream = fs.File.OpenRead("/data.bin");
+		Assert.That(stream.ReadByte(), Is.EqualTo(1));
+	}
 }

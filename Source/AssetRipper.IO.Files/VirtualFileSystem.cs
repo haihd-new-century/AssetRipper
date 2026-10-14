@@ -228,7 +228,11 @@ public partial class VirtualFileSystem : FileSystem
 			ReadOnlySpan<string> directoryParts = pathParts.AsSpan(0, pathParts.Length - 1);
 			string fileName = pathParts[^1];
 			DirectoryEntry directory = Parent.OpenDirectory(directoryParts);
-			return directory.OpenFile(fileName).Stream.CreateReference();
+			SmartStream stream = directory.OpenFile(fileName).Stream.CreateReference();
+			// Every reference shares one position; a newly opened file must start at the beginning,
+			// like a real file stream (otherwise reading right after a write starts at the end).
+			stream.Position = 0;
+			return stream;
 		}
 		public override SmartStream OpenRead(string path) => Open(path);
 		public override SmartStream OpenWrite(string path) => Open(path);
