@@ -276,10 +276,58 @@ public sealed class SerializableStructure : UnityAssetBase, IDeepCloneable
 
 	public override void Reset()
 	{
-		foreach (SerializableValue field in Fields)
+		// SerializableValue is a struct, so it must be reset in place (a foreach copy would discard the reset).
+		for (int i = 0; i < Fields.Length; i++)
 		{
-			field.Reset();
+			Fields[i].Reset();
 		}
+	}
+
+	/// <summary>
+	/// Reads fields in order, stopping at the first field that cannot be read.
+	/// </summary>
+	/// <remarks>
+	/// Every field is initialized to its default value first, so fields that could not be read
+	/// still have valid (default) content for export.
+	/// The reader is left positioned after the last successfully read field.
+	/// </remarks>
+	/// <returns>The number of fields that were read successfully. This equals <see cref="Fields"/>.Length on full success.</returns>
+	public int ReadPartially(ref EndianSpanReader reader, UnityVersion version, TransferInstructionFlags flags, ITypeResolver resolver)
+	{
+		InitializeFields(version);
+		for (int i = 0; i < Fields.Length; i++)
+		{
+			SerializableType.Field etalon = Type.Fields[i];
+			if (!IsAvailable(etalon))
+			{
+				continue;
+			}
+
+			int position = reader.Position;
+			try
+			{
+				if (etalon.Type == ManagedReferenceTypes.Registry)
+				{
+					Fields[i].AsAsset = ManagedReferenceRegistryReader.Read(ref reader, version, flags, Depth + 1, resolver);
+					if (etalon.Align)
+					{
+						reader.Align();
+					}
+				}
+				else
+				{
+					Fields[i].Read(ref reader, version, flags, Depth, etalon, resolver);
+				}
+			}
+			catch (Exception)
+			{
+				reader.Position = position;
+				Fields[i] = default;
+				Fields[i].Initialize(version, Depth, etalon);
+				return i;
+			}
+		}
+		return Fields.Length;
 	}
 
 	public void InitializeFields(UnityVersion version)

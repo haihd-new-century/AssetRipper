@@ -127,7 +127,14 @@ public sealed class GameAssetFactory : AssetFactoryBase
 			}
 		}
 
+		if (asset is TypeTreeObject && TryRecoverTypeTreeObject(assetInfo, assetData, out IUnityObjectBase? recovered))
+		{
+			Logger.Verbose(LogCategory.Import, error);
+			return recovered;
+		}
+
 		Logger.Error(LogCategory.Import, error);
+
 		UnreadableObject unreadable = new UnreadableObject(asset.AssetInfo, assetData.ToArray());
 		unreadable.Name = (asset as INamed)?.Name;
 		return unreadable;
@@ -199,6 +206,63 @@ public sealed class GameAssetFactory : AssetFactoryBase
 		{
 			return asset;
 		}
+	}
+
+	/// <summary>
+	/// Recovery for engine types that are read from embedded type trees (for example, PlayerSettings).
+	/// </summary>
+	/// <remarks>
+	/// Patch releases of Unity sometimes change the serialized layout of a class
+	/// before the embedded type tree data includes that release.
+	/// <list type="number">
+	/// <item>Try every other known type tree for the class, closest version first, and accept one that consumes the data exactly.</item>
+	/// <item>Otherwise, read the original tree field by field and keep the fields that were read before the mismatch.</item>
+	/// </list>
+	/// </remarks>
+	internal static bool TryRecoverTypeTreeObject(AssetInfo assetInfo, ReadOnlySpan<byte> assetData, [NotNullWhen(true)] out IUnityObjectBase? recovered)
+	{
+		ClassIDType classID = (ClassIDType)assetInfo.ClassID;
+		UnityVersion version = assetInfo.Collection.Version;
+		EndianType endian = assetInfo.Collection.EndianType;
+
+		foreach ((UnityVersion treeVersion, TypeTreeNodeStruct release, TypeTreeNodeStruct editor) in TypeTreeNodeStruct.EnumerateTpkTrees(classID, version))
+		{
+			TypeTreeObject candidate = TypeTreeObject.Create(assetInfo, release, editor, ITypeResolver.Null);
+			EndianSpanReader reader = new EndianSpanReader(assetData, endian);
+			try
+			{
+				candidate.Read(ref reader);
+			}
+			catch
+			{
+				continue;
+			}
+			if (reader.Position == reader.Length)
+			{
+				Logger.Warning(LogCategory.Import, $"{candidate.ClassName} in {assetInfo.Collection.Name} (Unity {version}) was read using the type tree of Unity {treeVersion}.");
+				recovered = candidate;
+				return true;
+			}
+		}
+
+		if (TypeTreeNodeStruct.TryMakeFromTpk(classID, version, out TypeTreeNodeStruct releaseRoot, out TypeTreeNodeStruct editorRoot))
+		{
+			TypeTreeObject partial = TypeTreeObject.Create(assetInfo, releaseRoot, editorRoot, ITypeResolver.Null);
+			EndianSpanReader reader = new EndianSpanReader(assetData, endian);
+			int readCount = partial.ReadPartially(ref reader, out int fieldCount);
+			if (readCount > 0)
+			{
+				Logger.Warning(LogCategory.Import,
+					$"{partial.ClassName} in {assetInfo.Collection.Name} (Unity {version}) was partially recovered: " +
+					$"{readCount}/{fieldCount} fields read before field '{partial.GetReadFieldName(readCount)}' at byte {reader.Position}/{reader.Length}. " +
+					$"The remaining fields use default values. The embedded type tree data is probably older than this Unity version.");
+				recovered = partial;
+				return true;
+			}
+		}
+
+		recovered = null;
+		return false;
 	}
 
 	private static string MakeError_IncorrectNumberOfBytesRead(IUnityObjectBase asset, ref EndianSpanReader reader)

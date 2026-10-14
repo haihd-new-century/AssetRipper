@@ -5,6 +5,7 @@ using AssetRipper.Import.Logging;
 using AssetRipper.Import.Platforms;
 using AssetRipper.Import.Structure.Assembly;
 using AssetRipper.Import.Structure.Assembly.Managers;
+using AssetRipper.Import.Structure.Assembly.TypeTrees;
 using AssetRipper.Import.Structure.Platforms;
 using AssetRipper.IO.Files;
 using AssetRipper.IO.Files.ResourceFiles;
@@ -43,6 +44,36 @@ public sealed class GameStructure : IDisposable
 		{
 			Logger.Log(LogType.Warning, LogCategory.Import, "The game structure processor could not find any valid assets.");
 		}
+		else
+		{
+			WarnAboutVersionsNewerThanTypeTreeData(FileCollection.FetchAssetCollections().Select(c => c.Version));
+		}
+	}
+
+	/// <summary>
+	/// Logs a warning for each Unity version that is newer than the embedded type tree data for its release line.
+	/// </summary>
+	/// <remarks>
+	/// Engine types without generated code (such as PlayerSettings) are read from that data,
+	/// so newer patch releases with serialization changes may only be partially readable.
+	/// </remarks>
+	/// <returns>The versions that were reported.</returns>
+	internal static List<UnityVersion> WarnAboutVersionsNewerThanTypeTreeData(IEnumerable<UnityVersion> versions)
+	{
+		List<UnityVersion> reported = [];
+		foreach (UnityVersion version in versions.Distinct().Order())
+		{
+			if (version.Major < 3 || TypeTreeNodeStruct.IsCoveredByTpk(version, out UnityVersion? newestKnown))
+			{
+				continue;
+			}
+			reported.Add(version);
+			string known = newestKnown is null ? $"no {version.Major}.{version.Minor} release" : newestKnown.Value.ToString();
+			Logger.Warning(LogCategory.Import,
+				$"Unity {version} is newer than the embedded type tree data (newest known for this release line: {known}; newest overall: {TypeTreeNodeStruct.NewestTpkVersion}). " +
+				"Some engine assets may be read incorrectly or only partially. Updating AssetRipper may help.");
+		}
+		return reported;
 	}
 
 	public bool IsValid => FileCollection.HasAnyAssetCollections();

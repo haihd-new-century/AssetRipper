@@ -1,4 +1,4 @@
-using AssetRipper.Import.Logging;
+﻿using AssetRipper.Import.Logging;
 using AssetRipper.Import.Platforms;
 using AssetRipper.Import.Structure.Assembly;
 using AssetRipper.Import.Structure.Assembly.Managers;
@@ -22,6 +22,18 @@ public abstract partial class PlatformGameStructure
 	public ScriptingBackend Backend { get; protected set; } = ScriptingBackend.Unknown;
 	public string? ManagedPath { get; protected set; }
 	public string? Il2CppGameAssemblyPath { get; protected set; }
+	/// <summary>
+	/// All IL2CPP binaries found for this game, most preferred first. <see cref="Il2CppGameAssemblyPath"/> is the first entry.
+	/// </summary>
+	/// <remarks>
+	/// Some platforms (for example, Android) ship one binary per ABI. If one cannot be analyzed, the next can be tried.
+	/// </remarks>
+	public IReadOnlyList<string> Il2CppGameAssemblyCandidates
+	{
+		get => il2CppGameAssemblyCandidates ?? (Il2CppGameAssemblyPath is null ? [] : [Il2CppGameAssemblyPath]);
+		protected set => il2CppGameAssemblyCandidates = value;
+	}
+	private IReadOnlyList<string>? il2CppGameAssemblyCandidates;
 	public string? Il2CppMetaDataPath { get; protected set; }
 	public string? UnityPlayerPath { get; protected set; }
 	public UnityVersion? Version { get; protected set; }
@@ -363,6 +375,55 @@ public abstract partial class PlatformGameStructure
 		FileStreamBundleHeader header = new();
 		header.Read(stream);
 		return UnityVersion.Parse(header.UnityWebMinimumRevision);
+	}
+
+	/// <summary>
+	/// Tries to determine the Unity version by reading the headers of the game's serialized files.
+	/// </summary>
+	/// <remarks>
+	/// This is a fallback for platforms where <see cref="Version"/> is not known up front and
+	/// the scripting backend (for example, Cpp2IL) cannot determine it from the player binary.
+	/// Exceptions are swallowed; unreadable candidates are skipped.
+	/// </remarks>
+	public UnityVersion? TryGetUnityVersionFromGameFiles()
+	{
+		if (Version is { } known && known != default)
+		{
+			return known;
+		}
+
+		List<string> candidates = [];
+		if (!string.IsNullOrEmpty(GameDataPath) && FileSystem.Directory.Exists(GameDataPath))
+		{
+			candidates.Add(FileSystem.Path.Join(GameDataPath, GlobalGameManagersName));
+			candidates.Add(FileSystem.Path.Join(GameDataPath, MainDataName));
+			candidates.Add(FileSystem.Path.Join(GameDataPath, LevelPrefix + "0"));
+		}
+		candidates.AddRange(Files.Values().Order(StringComparer.Ordinal));
+
+		foreach (string path in candidates)
+		{
+			if (!FileSystem.File.Exists(path))
+			{
+				continue;
+			}
+			try
+			{
+				UnityVersion version = path.EndsWith(AssetBundleExtension, StringComparison.OrdinalIgnoreCase)
+					? GetUnityVersionFromBundleFile(path)
+					: GetUnityVersionFromSerializedFile(path);
+				if (version != default && version.Major >= 3)
+				{
+					Logger.Info(LogCategory.Import, $"Unity version {version} was read from '{FileSystem.Path.GetFileName(path)}'");
+					return version;
+				}
+			}
+			catch (Exception)
+			{
+				// Not a serialized file (or a split file). Try the next candidate.
+			}
+		}
+		return null;
 	}
 
 	protected UnityVersion? GetUnityVersionFromDataDirectory(string dataDirectoryPath)

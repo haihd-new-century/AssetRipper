@@ -6,6 +6,7 @@ using AssetRipper.Assets.Traversal;
 using AssetRipper.Import.Structure.Assembly.Serializable;
 using AssetRipper.Import.Structure.Assembly.TypeTrees;
 using AssetRipper.IO.Endian;
+using AssetRipper.IO.Files.SerializedFiles;
 using System.Diagnostics;
 
 namespace AssetRipper.Import.AssetCreation;
@@ -21,6 +22,37 @@ public abstract class TypeTreeObject : NullObject
 	public sealed override string ClassName => EditorFields.Type.Name;
 
 	private TypeTreeObject(AssetInfo assetInfo) : base(assetInfo)
+	{
+	}
+
+	/// <summary>
+	/// Reads as many top-level fields as possible, leaving the remaining fields at their default values.
+	/// </summary>
+	/// <param name="reader">The reader, positioned at the start of the object data.</param>
+	/// <param name="fieldCount">The number of top-level fields in the type tree used for reading.</param>
+	/// <returns>The number of top-level fields that were read successfully.</returns>
+	public int ReadPartially(ref EndianSpanReader reader, out int fieldCount)
+	{
+		bool release = Collection.Flags.IsRelease();
+		SerializableStructure target = release ? ReleaseFields : EditorFields;
+		fieldCount = target.Fields.Length;
+		int read = target.ReadPartially(ref reader, Collection.Version, Collection.Flags, Resolver);
+		OnPartiallyRead(release);
+		return read;
+	}
+
+	/// <summary>
+	/// The name of a top-level field in the structure used for reading.
+	/// </summary>
+	public string GetReadFieldName(int index)
+	{
+		SerializableStructure target = Collection.Flags.IsRelease() ? ReleaseFields : EditorFields;
+		return (uint)index < (uint)target.Fields.Length ? target.Type.Fields[index].Name : "<end>";
+	}
+
+	private protected abstract ITypeResolver Resolver { get; }
+
+	private protected virtual void OnPartiallyRead(bool release)
 	{
 	}
 
@@ -44,6 +76,7 @@ public abstract class TypeTreeObject : NullObject
 		public SerializableStructure Fields { get; }
 		public override SerializableStructure ReleaseFields => Fields;
 		public override SerializableStructure EditorFields => Fields;
+		private protected override ITypeResolver Resolver => resolver;
 
 		public SingleTypeTreeObject(AssetInfo assetInfo, TypeTreeNodeStruct root, ITypeResolver resolver) : base(assetInfo)
 		{
@@ -82,6 +115,19 @@ public abstract class TypeTreeObject : NullObject
 		private readonly ITypeResolver resolver;
 		public override SerializableStructure ReleaseFields { get; }
 		public override SerializableStructure EditorFields { get; }
+		private protected override ITypeResolver Resolver => resolver;
+
+		private protected override void OnPartiallyRead(bool release)
+		{
+			if (release)
+			{
+				ConvertFields(ReleaseFields, EditorFields);
+			}
+			else
+			{
+				ConvertFields(EditorFields, ReleaseFields);
+			}
+		}
 
 		public DoubleTypeTreeObject(AssetInfo assetInfo, TypeTreeNodeStruct releaseRoot, TypeTreeNodeStruct editorRoot, ITypeResolver resolver) : base(assetInfo)
 		{

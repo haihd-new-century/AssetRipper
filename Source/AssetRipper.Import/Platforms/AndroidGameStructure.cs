@@ -1,4 +1,5 @@
-﻿using AssetRipper.Import.Structure.Assembly;
+﻿using AssetRipper.Import.Logging;
+using AssetRipper.Import.Structure.Assembly;
 using AssetRipper.Import.Structure.Platforms;
 using AssetRipper.IO.Files;
 
@@ -147,7 +148,46 @@ internal sealed class AndroidGameStructure : PlatformGameStructure
 			return null;
 		}
 
-		return FileSystem.Directory.EnumerateFiles(libDirectory, Il2CppGameAssemblyName, SearchOption.AllDirectories).FirstOrDefault();
+		List<string> all = OrderByPreferredAbi(FileSystem.Directory.EnumerateFiles(libDirectory, Il2CppGameAssemblyName, SearchOption.AllDirectories), FileSystem);
+		Il2CppGameAssemblyCandidates = all;
+		string? path = all.Count > 0 ? all[0] : null;
+		if (path is not null)
+		{
+			Logger.Info(LogCategory.Import, $"Using IL2CPP binary '{FileSystem.Path.GetFileName(FileSystem.Path.GetDirectoryName(path))}/{Il2CppGameAssemblyName}'");
+		}
+		return path;
+	}
+
+	/// <summary>
+	/// ABI directory names, most preferred first. 64-bit ARM is the most common and best supported by Cpp2IL.
+	/// </summary>
+	internal static readonly string[] PreferredAbis = ["arm64-v8a", "armeabi-v7a", "x86_64", "x86", "armeabi"];
+
+	/// <summary>
+	/// Chooses the native library from the most preferred ABI directory, so the result does not depend on file system enumeration order.
+	/// </summary>
+	internal static string? SelectPreferredAbi(IEnumerable<string> paths, FileSystem fileSystem)
+	{
+		List<string> ordered = OrderByPreferredAbi(paths, fileSystem);
+		return ordered.Count > 0 ? ordered[0] : null;
+	}
+
+	/// <summary>
+	/// Orders native libraries by <see cref="PreferredAbis"/>, then by path for determinism.
+	/// </summary>
+	internal static List<string> OrderByPreferredAbi(IEnumerable<string> paths, FileSystem fileSystem)
+	{
+		return paths
+			.OrderBy(path => GetAbiRank(path, fileSystem))
+			.ThenBy(path => path, StringComparer.Ordinal)
+			.ToList();
+	}
+
+	private static int GetAbiRank(string path, FileSystem fileSystem)
+	{
+		string abi = fileSystem.Path.GetFileName(fileSystem.Path.GetDirectoryName(path)) ?? "";
+		int rank = Array.IndexOf(PreferredAbis, abi);
+		return rank < 0 ? PreferredAbis.Length : rank;
 	}
 
 	private string? GetAndroidUnityAssemblyPath(string libDirectory)
@@ -157,7 +197,7 @@ internal sealed class AndroidGameStructure : PlatformGameStructure
 			return null;
 		}
 
-		return FileSystem.Directory.EnumerateFiles(libDirectory, AndroidUnityAssemblyName, SearchOption.AllDirectories).FirstOrDefault();
+		return SelectPreferredAbi(FileSystem.Directory.EnumerateFiles(libDirectory, AndroidUnityAssemblyName, SearchOption.AllDirectories), FileSystem);
 	}
 
 	private bool IsMono(string managedDirectory)

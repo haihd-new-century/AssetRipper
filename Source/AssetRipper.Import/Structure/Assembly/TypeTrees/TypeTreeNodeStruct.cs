@@ -265,6 +265,81 @@ public readonly struct TypeTreeNodeStruct : IReadOnlyList<TypeTreeNodeStruct>, I
 		return false;
 	}
 
+	/// <summary>
+	/// The newest Unity version for which the embedded type tree data contains information.
+	/// </summary>
+	public static UnityVersion NewestTpkVersion => TypeTreeBlob.Versions[^1];
+
+	/// <summary>
+	/// Determines whether the embedded type tree data has been generated from a Unity version
+	/// at least as new as <paramref name="version"/> within the same major.minor release line.
+	/// </summary>
+	/// <remarks>
+	/// Patch releases sometimes backport serialization changes,
+	/// so a version newer than any sampled patch of its release line may have an unknown layout.
+	/// </remarks>
+	/// <param name="version">The version to check.</param>
+	/// <param name="newestKnownInLine">The newest sampled version with the same major and minor, if any.</param>
+	public static bool IsCoveredByTpk(UnityVersion version, out UnityVersion? newestKnownInLine)
+	{
+		newestKnownInLine = null;
+		foreach (UnityVersion known in TypeTreeBlob.Versions)
+		{
+			if (known.Major == version.Major && known.Minor == version.Minor)
+			{
+				newestKnownInLine = known;
+			}
+		}
+		if (newestKnownInLine is null)
+		{
+			// The whole release line is unknown. It is only covered if it is older than the newest known version.
+			return version < NewestTpkVersion;
+		}
+		return version.CompareTo(newestKnownInLine.Value) <= 0;
+	}
+
+	/// <summary>
+	/// Enumerates every distinct type tree stored for <paramref name="classID"/> in the embedded type tree data,
+	/// ordered by how close their starting version is to <paramref name="version"/> (closest first, newer preferred on ties).
+	/// </summary>
+	/// <remarks>
+	/// This is used as a fallback when the tree selected for <paramref name="version"/> does not match the binary data,
+	/// which happens when a patch release contains serialization changes not yet present in the type tree data.
+	/// </remarks>
+	public static IEnumerable<(UnityVersion Version, TypeTreeNodeStruct Release, TypeTreeNodeStruct Editor)> EnumerateTpkTrees(ClassIDType classID, UnityVersion version)
+	{
+		TpkTypeTreeBlob blob = TypeTreeBlob;
+		TpkClassInformation? classInformation = blob.ClassInformation.FirstOrDefault(c => c.ID == (int)classID);
+		if (classInformation is null)
+		{
+			yield break;
+		}
+
+		List<(UnityVersion Version, TpkUnityClass Class)> candidates = classInformation.Classes
+			.Where(pair => pair.Value is not null)
+			.Select(pair => (pair.Key, pair.Value!))
+			.ToList();
+
+		int GetDistance(UnityVersion candidate)
+		{
+			int index = blob.Versions.BinarySearch(candidate);
+			int target = blob.Versions.BinarySearch(version);
+			if (index < 0) { index = ~index; }
+			if (target < 0) { target = ~target; }
+			return Math.Abs(index - target);
+		}
+
+		foreach ((UnityVersion candidateVersion, TpkUnityClass @class) in candidates
+			.OrderBy(c => GetDistance(c.Version))
+			.ThenByDescending(c => c.Version))
+		{
+			yield return (
+				candidateVersion,
+				FromTpkNode(blob.NodeBuffer[@class.ReleaseRootNode], blob.StringBuffer, blob.NodeBuffer),
+				FromTpkNode(blob.NodeBuffer[@class.EditorRootNode], blob.StringBuffer, blob.NodeBuffer));
+		}
+	}
+
 	private static TypeTreeNodeStruct FromTpkNode(TpkUnityNode node, TpkStringBuffer stringBuffer, TpkUnityNodeBuffer nodeBuffer)
 	{
 		TypeTreeNodeStruct[] subNodes = new TypeTreeNodeStruct[node.SubNodes.Length];
