@@ -1,4 +1,4 @@
-using AssetRipper.Assets;
+﻿using AssetRipper.Assets;
 using AssetRipper.Assets.Collections;
 using AssetRipper.GUI.Web.Pages.Assets;
 using AssetRipper.GUI.Web.Paths;
@@ -20,7 +20,11 @@ public sealed class ViewPage : DefaultPage
 		{
 			WriteToolbar(writer);
 			WriteGrid(writer);
-			WriteTable(writer);
+			WriteTableShell(writer);
+			using (new Div(writer).WithClass("text-center my-4").End())
+			{
+				new Button(writer).WithType("button").WithId("showMore").WithClass("btn btn-outline-secondary d-none").Close("…");
+			}
 			new P(writer).WithId("emptyFilterMessage").WithClass("text-secondary text-center my-5 d-none").Close("—");
 		}
 
@@ -113,6 +117,8 @@ public sealed class ViewPage : DefaultPage
 					.WithHref(AssetAPI.GetViewUrl(assetPath))
 					.WithClass($"ar-card kind-{kind}")
 					.WithCustomAttribute("data-class", asset.ClassName)
+					.WithCustomAttribute("data-kind", kind)
+					.WithCustomAttribute("data-pathid", asset.PathID.ToString())
 					.WithCustomAttribute("data-search", $"{name} {asset.ClassName} {asset.PathID}".ToLowerInvariant())
 					.WithCustomAttribute("title", name)
 					.End())
@@ -122,7 +128,7 @@ public sealed class ViewPage : DefaultPage
 						if (AssetAPI.HasImageData(asset))
 						{
 							new Img(writer)
-								.WithSrc(AssetAPI.GetThumbnailUrl(assetPath))
+								.WithCustomAttribute("data-src", AssetAPI.GetThumbnailUrl(assetPath))
 								.WithAlt(name)
 								.WithCustomAttribute("loading", "lazy")
 								.WithCustomAttribute("decoding", "async")
@@ -146,7 +152,10 @@ public sealed class ViewPage : DefaultPage
 		}
 	}
 
-	private void WriteTable(TextWriter writer)
+	/// <summary>
+	/// The table view is built in the browser from the cards' data attributes, so large collections are not rendered twice.
+	/// </summary>
+	private static void WriteTableShell(TextWriter writer)
 	{
 		using (new Div(writer).WithId("assetTableWrapper").WithClass("table-responsive d-none").End())
 		{
@@ -163,42 +172,7 @@ public sealed class ViewPage : DefaultPage
 						new Th(writer).WithClass("text-end").Close(Localization.PathId);
 					}
 				}
-				using (new Tbody(writer).WithId("assetsTable").End())
-				{
-					foreach (IUnityObjectBase asset in Collection)
-					{
-						AssetPath assetPath = Path.GetAsset(asset.PathID);
-						string kind = AssetSummary.GetKind(asset);
-						string name = asset.GetBestName();
-						using (new Tr(writer)
-							.WithCustomAttribute("data-class", asset.ClassName)
-							.WithCustomAttribute("data-search", $"{name} {asset.ClassName} {asset.PathID}".ToLowerInvariant())
-							.End())
-						{
-							using (new Td(writer).WithClass("ar-col-thumb").End())
-							{
-								if (AssetAPI.HasImageData(asset))
-								{
-									new Img(writer).WithCustomAttribute("data-src", AssetAPI.GetThumbnailUrl(assetPath, 64)).WithAlt(name).WithClass("ar-mini-thumb").WithCustomAttribute("loading", "lazy").Close();
-								}
-								else
-								{
-									new Span(writer).WithClass("ar-mini-icon").Close(AssetSummary.GetIcon(kind));
-								}
-							}
-							using (new Td(writer).End())
-							{
-								PathLinking.WriteLink(writer, assetPath, name);
-							}
-							using (new Td(writer).End())
-							{
-								new Span(writer).WithClass($"badge ar-badge kind-{kind}").Close(asset.ClassName);
-							}
-							new Td(writer).WithClass("text-secondary small").Close(AssetSummary.GetDetail(asset) ?? "");
-							new Td(writer).WithClass("text-end font-monospace small").Close(asset.PathID.ToString());
-						}
-					}
-				}
+				new Tbody(writer).WithId("assetsTable").Close();
 			}
 		}
 	}

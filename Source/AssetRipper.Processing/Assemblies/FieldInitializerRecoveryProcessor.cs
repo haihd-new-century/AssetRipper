@@ -101,9 +101,8 @@ public sealed class FieldInitializerRecoveryProcessor(ScriptContentLevel scriptC
 			{
 				continue;
 			}
-			TypeDefinition? type = TryGetType(manager, script);
-			SerializableStructure? structure = monoBehaviour.LoadStructure();
-			if (type is not null && structure is not null)
+			// Resolve the type first: loading the structure of an unresolvable script logs a warning.
+			if (TryGetType(manager, script) is { } type && monoBehaviour.LoadStructure() is { } structure)
 			{
 				Collect(type, structure, 0);
 			}
