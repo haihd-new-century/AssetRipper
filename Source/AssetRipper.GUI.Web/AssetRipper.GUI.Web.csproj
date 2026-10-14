@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<OutputPath>..\0Bins\Other\AssetRipper.GUI.Web\$(Configuration)\</OutputPath>
@@ -23,6 +23,7 @@
 		<EmbeddedResource Include="StaticContent/js/site.js" />
 		<EmbeddedResource Include="StaticContent/js/commands_page.js" />
 		<EmbeddedResource Include="StaticContent/js/mesh_preview.js" />
+		<EmbeddedResource Include="StaticContent/js/asset_browser.js" />
 	</ItemGroup>
 
 	<ItemGroup>

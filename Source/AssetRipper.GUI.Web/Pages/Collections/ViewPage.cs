@@ -1,5 +1,6 @@
-﻿using AssetRipper.Assets;
+using AssetRipper.Assets;
 using AssetRipper.Assets.Collections;
+using AssetRipper.GUI.Web.Pages.Assets;
 using AssetRipper.GUI.Web.Paths;
 
 namespace AssetRipper.GUI.Web.Pages.Collections;
@@ -11,83 +12,203 @@ public sealed class ViewPage : DefaultPage
 
 	public override string GetTitle() => Collection.Name;
 
-	private readonly int[] assetsPerPage = [500, 1000, 2000, 3000, 5000];
-
 	public override void WriteInnerContent(TextWriter writer)
 	{
-		new H1(writer).Close(GetTitle());
-
-		new H2(writer).Close(Localization.Bundle);
-		PathLinking.WriteLink(writer, Path.BundlePath, Collection.Bundle.Name);
-
-		if (Collection.IsScene)
-		{
-			new H2(writer).Close(Localization.Scene);
-			PathLinking.WriteLink(writer, (ScenePath)Path, Collection.Scene.Name);
-		}
+		WriteHeaderCard(writer);
 
 		if (Collection.Count > 0)
 		{
-			new H2(writer).Close(Localization.Assets);
-			
-			var availableClasses = Collection.Select(a => a.ClassName).Distinct().Order(StringComparer.Ordinal).ToList();
-			if (availableClasses.Count > 1)
+			WriteToolbar(writer);
+			WriteGrid(writer);
+			WriteTable(writer);
+			new P(writer).WithId("emptyFilterMessage").WithClass("text-secondary text-center my-5 d-none").Close("—");
+		}
+
+		if (Collection.Dependencies.Count > 1)
+		{
+			WriteDependencies(writer);
+		}
+	}
+
+	private void WriteHeaderCard(TextWriter writer)
+	{
+		using (new Div(writer).WithClass("ar-hero card mb-4").End())
+		{
+			using (new Div(writer).WithClass("card-body d-flex flex-wrap align-items-center gap-3").End())
 			{
-				new Label(writer).WithFor("classFilter").WithClass("me-2").Close(Localization.Class);
-
-				using (new Select(writer)
-					.WithId("classFilter")
-					.WithClass("me-2")
-					.End())
+				new Div(writer).WithClass("ar-hero-icon").Close(Collection.IsScene ? "🌄" : "🗂️");
+				using (new Div(writer).WithClass("flex-grow-1").End())
 				{
-					new Option(writer)
-						.WithValue(string.Empty)
-						.Close(Localization.All);
-
-					foreach (string cn in availableClasses)
+					new H1(writer).WithClass("h3 mb-1 text-break").Close(GetTitle());
+					using (new Div(writer).WithClass("d-flex flex-wrap gap-2 small").End())
 					{
-						new Option(writer)
-							.WithValue(cn)
-							.Close(cn);
+						WriteChip(writer, Localization.Bundle, () => PathLinking.WriteLink(writer, Path.BundlePath, Collection.Bundle.Name));
+						if (Collection.IsScene)
+						{
+							WriteChip(writer, Localization.Scene, () => PathLinking.WriteLink(writer, (ScenePath)Path, Collection.Scene.Name));
+						}
+						WriteChip(writer, Localization.Assets, () => writer.Write(Collection.Count.ToString("N0")));
+						WriteChip(writer, Localization.UiUnityVersion, () => writer.Write(Collection.Version.ToString().ToHtml()));
 					}
 				}
 			}
+		}
+	}
 
-			CreatePageOption(writer);
-				
-			using (new Table(writer).WithClass("table").End())
+	internal static void WriteChip(TextWriter writer, string label, Action writeValue)
+	{
+		using (new Span(writer).WithClass("ar-chip").End())
+		{
+			new Span(writer).WithClass("ar-chip-label").Close(label);
+			writeValue();
+		}
+	}
+
+	private void WriteToolbar(TextWriter writer)
+	{
+		List<(string ClassName, int Count)> classes = Collection
+			.GroupBy(a => a.ClassName)
+			.Select(g => (g.Key, g.Count()))
+			.OrderBy(c => c.Key, StringComparer.Ordinal)
+			.ToList();
+
+		using (new Div(writer).WithClass("ar-toolbar d-flex flex-wrap gap-2 align-items-center mb-3").End())
+		{
+			new Input(writer)
+				.WithType("search")
+				.WithId("assetFilter")
+				.WithClass("form-control ar-search")
+				.WithCustomAttribute("placeholder", Localization.UiFilterPlaceholder)
+				.WithCustomAttribute("aria-label", Localization.Search)
+				.Close();
+
+			using (new Select(writer).WithId("classFilter").WithClass("form-select ar-select").WithCustomAttribute("aria-label", Localization.Class).End())
+			{
+				new Option(writer).WithValue(string.Empty).Close($"{Localization.All} ({Collection.Count:N0})");
+				foreach ((string className, int count) in classes)
+				{
+					new Option(writer).WithValue(className).Close($"{className} ({count:N0})");
+				}
+			}
+
+			using (new Div(writer).WithClass("btn-group ms-auto").WithRole("group").End())
+			{
+				new Button(writer).WithType("button").WithClass("btn btn-outline-secondary active").WithCustomAttribute("data-view", "grid").Close("▦ " + Localization.UiViewGrid);
+				new Button(writer).WithType("button").WithClass("btn btn-outline-secondary").WithCustomAttribute("data-view", "table").Close("☰ " + Localization.UiViewTable);
+			}
+			new Span(writer).WithId("filterCount").WithClass("text-secondary small w-100").WithCustomAttribute("data-template", Localization.UiShownOf).Close();
+		}
+	}
+
+	private void WriteGrid(TextWriter writer)
+	{
+		using (new Div(writer).WithId("assetGrid").WithClass("ar-grid").End())
+		{
+			foreach (IUnityObjectBase asset in Collection)
+			{
+				AssetPath assetPath = Path.GetAsset(asset.PathID);
+				string kind = AssetSummary.GetKind(asset);
+				string name = asset.GetBestName();
+				using (new A(writer)
+					.WithHref(AssetAPI.GetViewUrl(assetPath))
+					.WithClass($"ar-card kind-{kind}")
+					.WithCustomAttribute("data-class", asset.ClassName)
+					.WithCustomAttribute("data-search", $"{name} {asset.ClassName} {asset.PathID}".ToLowerInvariant())
+					.WithCustomAttribute("title", name)
+					.End())
+				{
+					using (new Div(writer).WithClass("ar-thumb").End())
+					{
+						if (AssetAPI.HasImageData(asset))
+						{
+							new Img(writer)
+								.WithSrc(AssetAPI.GetThumbnailUrl(assetPath))
+								.WithAlt(name)
+								.WithCustomAttribute("loading", "lazy")
+								.WithCustomAttribute("decoding", "async")
+								.WithCustomAttribute("onerror", "this.replaceWith(Object.assign(document.createElement('span'),{className:'ar-thumb-icon',textContent:'🖼️'}))")
+								.Close();
+						}
+						else
+						{
+							new Span(writer).WithClass("ar-thumb-icon").Close(AssetSummary.GetIcon(kind));
+						}
+					}
+					using (new Div(writer).WithClass("ar-card-body").End())
+					{
+						new Div(writer).WithClass("ar-card-title").Close(name);
+						new Div(writer).WithClass("ar-card-class").Close(asset.ClassName);
+						string? detail = AssetSummary.GetDetail(asset);
+						new Div(writer).WithClass("ar-card-detail").Close(detail ?? $"#{asset.PathID}");
+					}
+				}
+			}
+		}
+	}
+
+	private void WriteTable(TextWriter writer)
+	{
+		using (new Div(writer).WithId("assetTableWrapper").WithClass("table-responsive d-none").End())
+		{
+			using (new Table(writer).WithClass("table table-hover align-middle ar-table").End())
 			{
 				using (new Thead(writer).End())
 				{
 					using (new Tr(writer).End())
 					{
-						new Th(writer).Close(Localization.PathId);
-						new Th(writer).Close(Localization.Class);
+						new Th(writer).WithClass("ar-col-thumb").Close(Localization.UiPreview);
 						new Th(writer).Close(Localization.Name);
+						new Th(writer).Close(Localization.Class);
+						new Th(writer).Close(Localization.UiDetails);
+						new Th(writer).WithClass("text-end").Close(Localization.PathId);
 					}
 				}
 				using (new Tbody(writer).WithId("assetsTable").End())
 				{
 					foreach (IUnityObjectBase asset in Collection)
 					{
-						using (new Tr(writer).WithCustomAttribute("data-class", asset.ClassName).End())
+						AssetPath assetPath = Path.GetAsset(asset.PathID);
+						string kind = AssetSummary.GetKind(asset);
+						string name = asset.GetBestName();
+						using (new Tr(writer)
+							.WithCustomAttribute("data-class", asset.ClassName)
+							.WithCustomAttribute("data-search", $"{name} {asset.ClassName} {asset.PathID}".ToLowerInvariant())
+							.End())
 						{
-							new Td(writer).Close(asset.PathID.ToString());
-							new Td(writer).Close(asset.ClassName);
+							using (new Td(writer).WithClass("ar-col-thumb").End())
+							{
+								if (AssetAPI.HasImageData(asset))
+								{
+									new Img(writer).WithCustomAttribute("data-src", AssetAPI.GetThumbnailUrl(assetPath, 64)).WithAlt(name).WithClass("ar-mini-thumb").WithCustomAttribute("loading", "lazy").Close();
+								}
+								else
+								{
+									new Span(writer).WithClass("ar-mini-icon").Close(AssetSummary.GetIcon(kind));
+								}
+							}
 							using (new Td(writer).End())
 							{
-								PathLinking.WriteLink(writer, Path.GetAsset(asset.PathID), asset.GetBestName());
+								PathLinking.WriteLink(writer, assetPath, name);
 							}
+							using (new Td(writer).End())
+							{
+								new Span(writer).WithClass($"badge ar-badge kind-{kind}").Close(asset.ClassName);
+							}
+							new Td(writer).WithClass("text-secondary small").Close(AssetSummary.GetDetail(asset) ?? "");
+							new Td(writer).WithClass("text-end font-monospace small").Close(asset.PathID.ToString());
 						}
 					}
 				}
 			}
 		}
+	}
 
-		if (Collection.Dependencies.Count > 1)
+	private void WriteDependencies(TextWriter writer)
+	{
+		new H2(writer).WithClass("h5 mt-5").Close(Localization.AssetTabDependencies);
+		using (new Div(writer).WithClass("table-responsive").End())
 		{
-			new H2(writer).Close(Localization.AssetTabDependencies);
-			using (new Table(writer).WithClass("table").End())
+			using (new Table(writer).WithClass("table table-sm ar-table").End())
 			{
 				using (new Thead(writer).End())
 				{
@@ -106,7 +227,6 @@ public sealed class ViewPage : DefaultPage
 						{
 							continue;
 						}
-
 						using (new Tr(writer).End())
 						{
 							new Td(writer).Close(i.ToString());
@@ -124,190 +244,6 @@ public sealed class ViewPage : DefaultPage
 	protected override void WriteScriptReferences(TextWriter writer)
 	{
 		base.WriteScriptReferences(writer);
-		
-		// Add client-side filtering script
-		using (new Script(writer).End())
-		{
-			writer.Write("""
-				document.addEventListener('DOMContentLoaded', function() {
-					const classFilter = document.getElementById('classFilter');
-					if (classFilter) {
-						classFilter.addEventListener('change', function() {
-							const selectedClass = this.value;
-							const rows = document.querySelectorAll('#assetsTable tr');
-
-							rows.forEach(function(row) {
-								const rowClass = row.getAttribute('data-class');
-								if (selectedClass === '' || rowClass === selectedClass) {
-									row.style.display = '';
-								} else {
-									row.style.display = 'none';
-								}
-							});
-
-							if (pageFilter) {
-								var event = new Event('change');
-								pageFilter.dispatchEvent(event);
-							}
-						});
-					}
-
-					const pageFilter = document.getElementById('assetsPerPage');
-					const previousButton = document.getElementById('previousButton');
-					const nextButton = document.getElementById('nextButton');
-					if (pageFilter) {
-						pageFilter.addEventListener('change', function() {
-							var selectedClass = "";
-							var query = '#assetsTable tr';
-							if(classFilter && classFilter.value != ''){
-								selectedClass = classFilter.value;
-								query +=  '[data-class=\"' + selectedClass + '\"]';
-							}
-
-							var pageNumber = parseInt(document.getElementById('pageNumber').innerHTML);
-							const rows = document.querySelectorAll(query);
-
-							const selected = this.value;
-							if(selected == ''){
-								for(var i = 0; i < rows.length; ++i){
-									rows[i].style.display = '';
-								}
-
-								if(previousButton){
-									previousButton.disabled = true;
-								}
-
-								if(nextButton){
-									nextButton.disabled = true;
-								}
-
-								document.getElementById('pageNumber').innerHTML = '1';
-							}else {
-								const selectedCount = parseInt(this.value);
-
-								if(rows.length < selectedCount * pageNumber){
-									pageNumber = Math.ceil(rows.length / selectedCount);
-									document.getElementById('pageNumber').innerHTML = '' + pageNumber;
-
-									if(nextButton){
-										nextButton.disabled = true;
-									}
-
-									if(pageNumber == 1){
-										if(previousButton){
-											previousButton.disabled = true;
-										}
-									}
-								}else if(rows.length >= selectedCount * pageNumber){
-									if(nextButton){
-										nextButton.disabled = false;
-									}
-								}
-
-								const start = selectedCount * (pageNumber - 1);
-								for(var i = 0; i < rows.length; ++i){
-									if(i >= start && i < selectedCount * pageNumber){
-										rows[i].style.display = '';
-									}else {
-										rows[i].style.display = 'none';
-									}
-								}
-							}
-						});
-					}
-
-					
-					if(previousButton){
-						previousButton.addEventListener('click', function() {
-							var pageNumber = parseInt(document.getElementById('pageNumber').innerHTML);
-							--pageNumber;
-							document.getElementById('pageNumber').innerHTML = "" + pageNumber;
-
-							if(pageNumber == 1){
-								this.disabled = true;
-							}
-
-							if(nextButton){
-								nextButton.disabled = false;
-							}
-
-							if (pageFilter) {
-								var event = new Event('change');
-								pageFilter.dispatchEvent(event);
-							}
-						});
-					}
-
-					if(nextButton){
-						nextButton.addEventListener('click', function() {
-							var pageNumber = parseInt(document.getElementById('pageNumber').innerHTML);
-							++pageNumber;
-							document.getElementById('pageNumber').innerHTML = "" + pageNumber;
-				
-							if(previousButton){
-								previousButton.disabled = false;
-							}
-
-							if (pageFilter) {
-								var query = '#assetsTable tr';
-								if(classFilter && classFilter.value != ''){
-									selectedClass = classFilter.value;
-									query +=  '[data-class=\"' + selectedClass + '\"]';
-								}
-								const rows = document.querySelectorAll(query);
-								const selectedCount = parseInt(pageFilter.value);
-								if(rows.length < selectedCount * pageNumber){
-									this.disabled = true;
-								}
-
-								var event = new Event('change');
-								pageFilter.dispatchEvent(event);
-							}
-						});
-					}
-				});
-				""");
-		}
-	}
-
-	private void CreatePageOption(TextWriter writer)
-	{
-		new Label(writer).WithFor("pageCollection").WithClass("me-2").Close(Localization.Page);
-		new Button(writer)
-				.WithId("previousButton")
-				.WithClass("ms-2")
-				.WithType("button")
-				.WithCustomAttribute("v-else")
-				.WithCustomAttribute("disabled")
-				.Close(Localization.Previous);
-
-		new Label(writer).WithId("pageNumber").WithClass("ms-2").Close("1");
-
-		new Button(writer)
-				.WithId("nextButton")
-				.WithType("button")
-				.WithClass("ms-2")
-				.WithCustomAttribute("v-else")
-				.WithCustomAttribute("disabled")
-				.Close(Localization.Next);
-
-		new Label(writer).WithClass("ms-2").Close(Localization.AssetsPerPage);
-
-		using (new Select(writer)
-			.WithId("assetsPerPage")
-			.WithClass("ms-2")
-			.End())
-		{
-			new Option(writer)
-					.WithValue(string.Empty)
-					.Close(Localization.All);
-
-			foreach (int count in assetsPerPage)
-			{
-				new Option(writer)
-				.WithValue("" + count)
-				.Close("" + count);
-			}
-		}
+		new Script(writer).WithSrc("/js/asset_browser.js").Close();
 	}
 }

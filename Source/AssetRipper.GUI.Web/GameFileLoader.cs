@@ -1,4 +1,4 @@
-using AssetRipper.Assets.Bundles;
+﻿using AssetRipper.Assets.Bundles;
 using AssetRipper.Export.Configuration;
 using AssetRipper.Export.PrimaryContent;
 using AssetRipper.Export.UnityProjects;
@@ -17,8 +17,14 @@ public static class GameFileLoader
 	public static bool IsLoaded => GameData is not null;
 	public static GameBundle GameBundle => GameData!.GameBundle;
 	public static IAssemblyManager AssemblyManager => GameData!.AssemblyManager;
+	public static string? PlatformName => GameData?.PlatformStructure?.GetType().Name.Replace("GameStructure", "");
 	public static FullConfiguration Settings { get; } = LoadSettings();
 	public static bool Headless { get; set; }
+
+	/// <summary>
+	/// Incremented whenever game data is loaded or reset. Used to invalidate cached previews.
+	/// </summary>
+	public static int LoadGeneration { get; private set; }
 
 	public static ExportHandler ExportHandler
 	{
@@ -44,6 +50,8 @@ public static class GameFileLoader
 		if (GameData is not null)
 		{
 			GameData = null;
+			LoadGeneration++;
+			Pages.Assets.AssetAPI.ClearThumbnailCache();
 			GC.Collect();
 			Logger.Info(LogCategory.General, "Data was reset.");
 		}
@@ -54,6 +62,7 @@ public static class GameFileLoader
 		Reset();
 		Settings.LogConfigurationValues();
 		GameData = ExportHandler.LoadAndProcess(paths, LocalFileSystem.Instance);
+		LoadGeneration++;
 	}
 
 	public static async Task ExportUnityProject(string path)

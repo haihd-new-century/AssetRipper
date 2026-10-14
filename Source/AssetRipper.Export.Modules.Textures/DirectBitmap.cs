@@ -1,4 +1,4 @@
-using AssetRipper.Export.Configuration;
+﻿using AssetRipper.Export.Configuration;
 
 namespace AssetRipper.Export.Modules.Textures;
 
@@ -83,6 +83,11 @@ public abstract class DirectBitmap
 	public abstract DirectBitmap Crop(Range xRange, Range yRange, Range zRange);
 
 	public abstract DirectBitmap DeepClone();
+
+	/// <summary>
+	/// The pixels of all layers converted to 8-bit RGBA, row by row.
+	/// </summary>
+	public abstract byte[] ToRgba32();
 
 	public void Save(Stream stream, ImageExportFormat format)
 	{

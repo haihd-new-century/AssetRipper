@@ -43,6 +43,7 @@ internal static class AssetAPI
 		public const string Base = "/Assets";
 		public const string View = Base + "/View";
 		public const string Image = Base + "/Image";
+		public const string Thumbnail = Base + "/Thumbnail";
 		public const string Audio = Base + "/Audio";
 		public const string Model = Base + "/Model.glb";
 		public const string Font = Base + "/Font";
@@ -102,6 +103,78 @@ internal static class AssetAPI
 			return Results.Bytes(GetRawImageData(asset), "application/octet-stream").ExecuteAsync(context);
 		}
 	}
+
+	#region Thumbnail
+	public const int DefaultThumbnailSize = 128;
+	private const int MaxThumbnailCacheEntries = 4096;
+	private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, byte[]> thumbnailCache = new();
+	private static readonly Lock decodeLock = new();
+
+	public static string GetThumbnailUrl(AssetPath path, int size = DefaultThumbnailSize)
+	{
+		return $"{Urls.Thumbnail}?{GetPathQuery(path)}&Size={size}&v={GameFileLoader.LoadGeneration}";
+	}
+
+	/// <summary>
+	/// Returns a small PNG preview of an image-like asset (texture, sprite, terrain heightmap).
+	/// </summary>
+	/// <remarks>
+	/// Decoding is serialized because asset data is read from shared streams; results are cached per loaded game.
+	/// Browsers lazily request many thumbnails at once, so caching makes collection pages fast after the first view.
+	/// </remarks>
+	public static Task GetThumbnail(HttpContext context)
+	{
+		if (!TryGetAssetFromQuery(context, out IUnityObjectBase? asset, out Task? failureTask))
+		{
+			return failureTask;
+		}
+		if (!HasImageData(asset))
+		{
+			return context.Response.NotFound("Asset has no image data.");
+		}
+
+		int size = DefaultThumbnailSize;
+		if (context.Request.Query.TryGetValue("Size", out var sizeValues) && int.TryParse(sizeValues.ToString(), out int requested))
+		{
+			size = System.Math.Clamp(requested, 16, 512);
+		}
+
+		string key = $"{GameFileLoader.LoadGeneration}|{size}|{context.Request.Query[Path]}";
+		if (!thumbnailCache.TryGetValue(key, out byte[]? png))
+		{
+			DirectBitmap bitmap;
+			lock (decodeLock)
+			{
+				try
+				{
+					bitmap = GetImageBitmap(asset);
+				}
+				catch (Exception ex)
+				{
+					Logger.Verbose(LogCategory.General, $"Thumbnail decoding failed for {asset}: {ex.Message}");
+					bitmap = DirectBitmap.Empty;
+				}
+			}
+			if (bitmap.IsEmpty)
+			{
+				return context.Response.NotFound("Image data could not be decoded.");
+			}
+			using MemoryStream stream = new();
+			Thumbnails.Create(bitmap, size).SaveAsPng(stream);
+			png = stream.ToArray();
+			if (thumbnailCache.Count >= MaxThumbnailCacheEntries)
+			{
+				thumbnailCache.Clear();
+			}
+			thumbnailCache[key] = png;
+		}
+
+		context.Response.Headers.CacheControl = "private, max-age=3600";
+		return Results.Bytes(png, "image/png").ExecuteAsync(context);
+	}
+
+	internal static void ClearThumbnailCache() => thumbnailCache.Clear();
+	#endregion
 
 	public static bool HasImageData(IUnityObjectBase asset) => asset switch
 	{

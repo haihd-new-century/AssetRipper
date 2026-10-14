@@ -19,6 +19,7 @@ public abstract class DefaultPage : HtmlPage
 				new Title(writer).Close(GetTitle());
 				OnlineDependencies.Bootstrap.WriteStyleSheetReference(writer);
 				new Link(writer).WithRel("stylesheet").WithHref("/css/site.css").Close();
+				new Meta(writer).WithName("color-scheme").WithContent("dark").Close();
 			}
 			using (new Body(writer).WithCustomAttribute("data-bs-theme", "dark").End())
 			{
@@ -45,15 +46,43 @@ public abstract class DefaultPage : HtmlPage
 
 	private static void WriteHeader(TextWriter writer)
 	{
-		using (new Header(writer).End())
+		using (new Header(writer).WithClass("ar-navbar mb-4").End())
 		{
-			using (new Div(writer).WithClass("btn-group").End())
+			using (new Div(writer).WithClass("container d-flex flex-wrap align-items-center gap-2 py-2").End())
 			{
-				WriteFileMenu(writer);
-				WriteViewMenu(writer);
-				WriteExportMenu(writer);
-				WriteLanguageMenu(writer);
-				WriteDevelopmentMenu(writer);
+				using (new A(writer).WithHref("/").WithClass("ar-brand").End())
+				{
+					new Span(writer).WithClass("ar-brand-logo").Close("AR");
+					new Span(writer).Close(GameFileLoader.Premium ? Localization.AssetRipperPremium : Localization.AssetRipperFree);
+				}
+				using (new Div(writer).WithClass("btn-group").End())
+				{
+					WriteFileMenu(writer);
+					WriteViewMenu(writer);
+					WriteExportMenu(writer);
+					WriteLanguageMenu(writer);
+					WriteDevelopmentMenu(writer);
+				}
+				WriteLoadStatus(writer);
+			}
+		}
+	}
+
+	private static void WriteLoadStatus(TextWriter writer)
+	{
+		bool loaded = GameFileLoader.IsLoaded;
+		using (new Div(writer).WithClass(loaded ? "ar-status loaded ms-auto" : "ar-status ms-auto").End())
+		{
+			new Span(writer).WithClass("ar-dot").Close();
+			if (loaded)
+			{
+				string name = GameFileLoader.GameBundle.Name;
+				PathLinking.WriteLink(writer, GameFileLoader.GameBundle, string.IsNullOrEmpty(name) ? Localization.ViewLoadedFiles : name);
+				writer.Write($" · {GameFileLoader.GameBundle.GetMaxUnityVersion().ToString().ToHtml()}");
+			}
+			else
+			{
+				writer.Write(Localization.NoFilesLoaded.ToHtml());
 			}
 		}
 	}
@@ -233,7 +262,7 @@ public abstract class DefaultPage : HtmlPage
 
 	private static void WriteFooter(TextWriter writer)
 	{
-		using (new Footer(writer).WithClass("border-top footer text-muted").End())
+		using (new Footer(writer).WithClass("footer").End())
 		{
 			using (new Div(writer).WithClass("container text-center").End())
 			{

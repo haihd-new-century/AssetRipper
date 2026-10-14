@@ -51,4 +51,5 @@ internal sealed class EmptyDirectBitmap : DirectBitmap
 	public override void SaveAsTga(Stream stream)
 	{
 	}
+	public override byte[] ToRgba32() => [];
 }

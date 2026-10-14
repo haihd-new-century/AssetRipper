@@ -1,4 +1,4 @@
-using AssetRipper.Conversions.FastPng;
+﻿using AssetRipper.Conversions.FastPng;
 using AssetRipper.TextureDecoder.Exr;
 using AssetRipper.TextureDecoder.Rgb;
 using AssetRipper.TextureDecoder.Rgb.Formats;
@@ -120,6 +120,16 @@ public sealed class DirectBitmap<TColor, TChannel> : DirectBitmap
 			}
 		}
 		return new DirectBitmap<TColor, TChannel>(xLength, yLength, zLength, croppedData);
+	}
+
+	public override byte[] ToRgba32()
+	{
+		if (typeof(TColor) == typeof(ColorRGBA<byte>))
+		{
+			return Bits.ToArray();
+		}
+		RgbConverter.Convert<TColor, TChannel, ColorRGBA<byte>, byte>(Bits, Width, Height * Depth, out byte[] data);
+		return data;
 	}
 
 	public override DirectBitmap<TColor, TChannel> DeepClone()

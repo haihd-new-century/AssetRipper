@@ -1,4 +1,4 @@
-using AssetRipper.GUI.Web.Documentation;
+﻿using AssetRipper.GUI.Web.Documentation;
 using AssetRipper.GUI.Web.Pages;
 using AssetRipper.GUI.Web.Pages.Assets;
 using AssetRipper.GUI.Web.Pages.Bundles;
@@ -150,6 +150,7 @@ public static class WebApplicationLauncher
 		app.MapStaticFile("/js/site.js", "text/javascript");
 		app.MapStaticFile("/js/commands_page.js", "text/javascript");
 		app.MapStaticFile("/js/mesh_preview.js", "text/javascript");
+		app.MapStaticFile("/js/asset_browser.js", "text/javascript");
 		OnlineDependencies.MapDependencies(app);
 
 		//Normal Pages
@@ -189,6 +190,9 @@ public static class WebApplicationLauncher
 			.Produces<byte[]>(contentType: "application/octet-stream")
 			.WithAssetPathParameter()
 			.WithImageExtensionParameter();
+		app.MapGet(AssetAPI.Urls.Thumbnail, AssetAPI.GetThumbnail)
+			.Produces<byte[]>(contentType: "image/png")
+			.WithAssetPathParameter();
 		app.MapGet(AssetAPI.Urls.Audio, AssetAPI.GetAudioData)
 			.Produces<byte[]>(contentType: "application/octet-stream")
 			.WithAssetPathParameter();
