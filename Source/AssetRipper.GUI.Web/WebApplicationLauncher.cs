@@ -100,6 +100,7 @@ public static class WebApplicationLauncher
 		builder.WebHost.UseUrls($"http://127.0.0.1:{port}");
 
 		builder.Services.AddTransient<ErrorHandlingMiddleware>(static (_) => new());
+		builder.Services.AddTransient<LocalOriginMiddleware>(static (_) => new());
 		builder.Services.ConfigureHttpJsonOptions(options =>
 		{
 			options.SerializerOptions.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
@@ -122,6 +123,8 @@ public static class WebApplicationLauncher
 		WebApplication app = builder.Build();
 
 		// Configure the HTTP request pipeline.
+		// Must run first: rejects DNS-rebinding hosts and cross-site form posts before any handler runs.
+		app.UseMiddleware<LocalOriginMiddleware>();
 #if !DEBUG
 		app.UseMiddleware<ErrorHandlingMiddleware>();
 #endif

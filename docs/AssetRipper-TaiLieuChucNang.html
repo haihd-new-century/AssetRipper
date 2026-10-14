@@ -98,7 +98,7 @@ footer{margin-top:60px;color:var(--muted);font-size:13px;border-top:1px solid va
 	<div class="chips">
 		<span class="chip"><b>Nền tảng</b>.NET 10 · C# · Native AOT</span>
 		<span class="chip"><b>Giấy phép</b>GPL-3.0</span>
-		<span class="chip"><b>Kiểm thử</b>599/599 đạt</span>
+		<span class="chip"><b>Kiểm thử</b>611/611 đạt</span>
 		<span class="chip"><b>Thay đổi</b>60 file · +4.712 / −318 dòng</span>
 		<span class="chip"><b>Cập nhật</b>15/10/2026</span>
 	</div>
@@ -334,7 +334,7 @@ Import : Il2Cpp initialization succeeded with '…/lib/armeabi-v7a/libil2cpp.so'
 	<tr><td>GET</td><td><code>/Assets/View</code>, <code>/Assets/Image</code>, <b><code>/Assets/Thumbnail</code></b> (mới), <code>/Assets/Audio</code>, <code>/Assets/Model.glb</code>, <code>/Assets/Font</code>, <code>/Assets/Video</code>, <code>/Assets/Json</code>, <code>/Assets/Yaml</code>, <code>/Assets/Text</code>, <code>/Assets/Binary</code></td><td>Nội dung từng asset (<code>Path=</code> JSON)</td></tr>
 	<tr><td>GET/POST</td><td><code>/Settings/Edit</code>, <code>/Settings/Update</code>, <code>/ConfigurationFiles/*</code></td><td>Cài đặt và file cấu hình</td></tr>
 </table>
-<div class="note bad"><b>Bảo mật:</b> API không có xác thực, và các endpoint POST nhận form <code>x-www-form-urlencoded</code>, loại request mà trình duyệt gửi được mà không cần preflight. Vì vậy một trang web độc hại có thể khiến trình duyệt gọi export, kèm thao tác xoá thư mục ở chế độ headless. Lỗ hổng này (mục #1, nằm ngoài phạm vi đợt này) chưa được sửa: không nên mở port ra mạng và không nên dùng <code>--headless</code> trong khi đang duyệt web.</div>
+<div class="note"><b>Bảo mật (#1, đã sửa thêm):</b> <code>LocalOriginMiddleware</code> chạy trước mọi handler. Nó từ chối (403) request có Host không phải loopback, chặn DNS rebinding. Nó cũng từ chối request POST cross-site, nhận diện qua <code>Origin</code>/<code>Referer</code> không phải loopback, <code>Origin: null</code>, hoặc <code>Sec-Fetch-Site: cross-site|same-site</code>; đây là lớp chống CSRF cho form <code>/Export/*</code>, <code>/LoadFile</code>, <code>/Reset</code>. Request không có header trình duyệt (curl, script) vẫn được phép, vì một trang web không thể giả mạo loại request này. Kiểm chứng bằng curl: Host lạ, Origin lạ, Referer lạ, Origin null và Sec-Fetch-Site cross-site đều bị chặn (403); POST cùng origin và POST từ script đều đi qua (302). API vẫn không có xác thực, nên không được mở port ra mạng.</div>
 </section>
 
 <section id="mo-rong">
@@ -353,7 +353,7 @@ Import : Il2Cpp initialization succeeded with '…/lib/armeabi-v7a/libil2cpp.so'
 <section id="ra-soat">
 <h2>11. Rà soát &amp; kiểm thử</h2>
 <div class="grid">
-	<div class="card"><h4>Unit test</h4><div class="stat">599 / 599</div><p class="muted">8 project test. Trong đó AssetRipper.Tests có 242 test (trước đây 173); 70 test mới thuộc ImportRobustness, CliOptions, ExportCustomization, FieldInitializerRecovery, StaticMeshSeparation và VirtualFileSystem.</p></div>
+	<div class="card"><h4>Unit test</h4><div class="stat">611 / 611</div><p class="muted">8 project test. Trong đó AssetRipper.Tests có 242 test (trước đây 173) và GUI.Web.Tests có 18 test (trước đây 6); 82 test mới thuộc ImportRobustness, CliOptions, ExportCustomization, FieldInitializerRecovery, StaticMeshSeparation, VirtualFileSystem và LocalOriginMiddleware.</p></div>
 	<div class="card"><h4>Build</h4><div class="stat">AOT ✓</div><p class="muted">Release Native AOT osx-arm64 build thành công, không phát sinh cảnh báo trim/AOT mới từ code thêm vào.</p></div>
 	<div class="card"><h4>End-to-end</h4><div class="stat">3 APK</div><p class="muted"><code>ripper.apk</code>, <code>rich.apk</code>, <code>static.apk</code> (Unity 6000.3.26f1, IL2CPP arm64): 0 lỗi, chỉ 2 cảnh báo dự kiến.</p></div>
 </div>
@@ -368,7 +368,7 @@ Import : Il2Cpp initialization succeeded with '…/lib/armeabi-v7a/libil2cpp.so'
 	<li>Trên macOS, <code>PeakWorkingSet64</code> luôn trả 0; CLI chuyển sang hiển thị working set hiện tại cùng đỉnh managed heap.</li>
 </ul>
 <h3>Cách tái kiểm tra</h3>
-<pre><code>dotnet test AssetRipper.slnx                         # 599 test
+<pre><code>dotnet test AssetRipper.slnx                         # 611 test
 DOTNET=$HOME/.dotnet/dotnet ./build.sh                # Native AOT
 dotnet Source/0Bins/AssetRipper.CLI/Debug/AssetRipper.CLI.dll export game.apk -o out -f --log out.log</code></pre>
 </section>
@@ -380,7 +380,7 @@ dotnet Source/0Bins/AssetRipper.CLI/Debug/AssetRipper.CLI.dll export game.apk -o
 	<li><b>Thân method IL2CPP:</b> vẫn rỗng ở bản Free; chỉ có field và giá trị khởi tạo.</li>
 	<li><b>Export không tất định:</b> GUID của scene/DLL và MVID thay đổi giữa các lần chạy. Hạn chế này có từ trước, không do thay đổi song song gây ra.</li>
 	<li><b><code>-ld_classic</code></b> đã bị Apple đánh dấu deprecated; nếu Xcode gỡ hẳn thì dùng <code>--no-aot</code>.</li>
-	<li><b>Web API không có xác thực / CSRF</b> (xem mục 9).</li>
+	<li><b>Web API không có xác thực:</b> CSRF và DNS rebinding đã được chặn (mục 9), nhưng các request GET (ví dụ <code>/Dialogs/*</code>, <code>/IO/*/Exists</code>) vẫn gọi được từ trang khác. Chúng không thay đổi dữ liệu. Không mở port ra mạng.</li>
 	<li><b>Thumbnail</b> được giải mã tuần tự, nên lần đầu xem collection rất lớn sẽ chậm; các lần sau dùng cache.</li>
 </ul>
 </section>
@@ -400,6 +400,8 @@ dotnet Source/0Bins/AssetRipper.CLI/Debug/AssetRipper.CLI.dll export game.apk -o
 	<tr><td><code>c6beb7724</code></td><td>Asset deduplication (Premium)</td></tr>
 	<tr><td><code>b792bb67c</code></td><td>Static mesh separation (Premium)</td></tr>
 	<tr><td><code>d959d35d1</code></td><td>Sửa lỗi phát hiện khi rà soát: ảnh tải lười, bảng dựng phía client</td></tr>
+	<tr><td><code>306c476ef</code> · <code>4d8467396</code></td><td>Kiểm chứng nhánh thử lại IL2CPP; sửa lỗi vị trí đọc của VirtualFileSystem; test #4</td></tr>
+	<tr><td>(commit này)</td><td>Chống CSRF và DNS rebinding cho web server cục bộ (#1)</td></tr>
 </table>
 </section>
 
