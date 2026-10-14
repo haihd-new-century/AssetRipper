@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark light">
+<title>AssetRipper — Tài liệu chức năng</title>
+<style>
+:root{--bg:#0f1218;--surface:#171b23;--surface2:#1e2430;--border:#2a3140;--text:#e6e9ef;--muted:#8b95a7;--accent:#4f8cff;--accent2:#7c5cff;--ok:#22c55e;--warn:#f59e0b;--bad:#ef4444;--radius:12px;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+@media (prefers-color-scheme:light){:root{--bg:#f6f7fb;--surface:#fff;--surface2:#eef1f7;--border:#d9dee8;--text:#1b2230;--muted:#5d6878}}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:16px}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans",sans-serif}
+a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
+.layout{display:grid;grid-template-columns:280px 1fr;min-height:100vh}
+nav.toc{position:sticky;top:0;height:100vh;overflow:auto;padding:20px 16px;border-right:1px solid var(--border);background:var(--surface)}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:17px;margin-bottom:14px}
+.logo{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;color:#fff;background:linear-gradient(135deg,var(--accent),var(--accent2));font-size:14px}
+.toc input{width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);margin-bottom:12px}
+.toc ol{list-style:none;margin:0;padding:0}.toc li{margin:1px 0}
+.toc a{display:block;padding:5px 9px;border-radius:7px;color:var(--muted);font-size:14px}
+.toc a:hover,.toc a.active{background:var(--surface2);color:var(--text);text-decoration:none}
+.toc .sub a{padding-left:22px;font-size:13px}
+main{padding:32px 44px 80px;max-width:1120px}
+h1{font-size:30px;margin:0 0 6px}h2{font-size:23px;margin:48px 0 12px;padding-top:8px;border-top:1px solid var(--border)}
+h3{font-size:17px;margin:26px 0 8px}
+p,li{color:var(--text)}.muted{color:var(--muted)}
+.hero{padding:26px;border-radius:16px;border:1px solid var(--border);background:linear-gradient(135deg,rgba(79,140,255,.16),rgba(124,92,255,.08)),var(--surface);margin-bottom:22px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.chip{display:inline-flex;gap:6px;padding:3px 11px;border-radius:999px;border:1px solid var(--border);background:var(--surface2);font-size:13px}
+.chip b{color:var(--muted);font-weight:500}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
+.card{border:1px solid var(--border);background:var(--surface);border-radius:var(--radius);padding:16px}
+.card h4{margin:0 0 6px;font-size:15px}
+.stat{font-size:26px;font-weight:700}
+table{width:100%;border-collapse:collapse;margin:10px 0 16px;font-size:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+th,td{text-align:left;padding:8px 11px;border-bottom:1px solid var(--border);vertical-align:top}
+th{background:var(--surface2);color:var(--muted);font-weight:600;font-size:12.5px;text-transform:uppercase;letter-spacing:.03em}
+tr:last-child td{border-bottom:0}
+code{font-family:var(--mono);font-size:13px;background:var(--surface2);padding:1px 6px;border-radius:5px;border:1px solid var(--border)}
+pre{font-family:var(--mono);font-size:13px;background:#0b0e13;color:#dbe3f1;border:1px solid var(--border);border-radius:10px;padding:14px 16px;overflow:auto;line-height:1.5}
+pre code{background:none;border:0;padding:0}
+.badge{display:inline-block;padding:1px 9px;border-radius:999px;font-size:12px;font-weight:600;border:1px solid}
+.ok{color:var(--ok);border-color:rgba(34,197,94,.45);background:rgba(34,197,94,.10)}
+.warn{color:var(--warn);border-color:rgba(245,158,11,.45);background:rgba(245,158,11,.10)}
+.bad{color:var(--bad);border-color:rgba(239,68,68,.45);background:rgba(239,68,68,.10)}
+.note{border-left:4px solid var(--accent);background:var(--surface);padding:10px 14px;border-radius:0 10px 10px 0;margin:12px 0}
+.note.warn{border-left-color:var(--warn);color:var(--text)}.note.bad{border-left-color:var(--bad);color:var(--text)}
+.pipeline{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:12px 0}
+.step{padding:10px 14px;border-radius:10px;background:var(--surface);border:1px solid var(--border);font-weight:600;font-size:14px}
+.step small{display:block;font-weight:400;color:var(--muted);font-size:12px}
+.arrow{color:var(--muted)}
+.feature-id{display:inline-grid;place-items:center;min-width:30px;height:24px;padding:0 7px;border-radius:7px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-size:12.5px;font-weight:700;margin-right:8px}
+.hidden-by-search{display:none!important}
+footer{margin-top:60px;color:var(--muted);font-size:13px;border-top:1px solid var(--border);padding-top:16px}
+@media (max-width:900px){.layout{grid-template-columns:1fr}nav.toc{position:static;height:auto}main{padding:22px}}
+@media print{nav.toc{display:none}.layout{display:block}pre{white-space:pre-wrap}}
+</style>
+</head>
+<body>
+<div class="layout">
+<nav class="toc" aria-label="Mục lục">
+	<div class="brand"><span class="logo">AR</span>AssetRipper Docs</div>
+	<input id="q" type="search" placeholder="Tìm trong tài liệu…" aria-label="Tìm trong tài liệu">
+	<ol id="tocList">
+		<li><a href="#tong-quan">1. Tổng quan</a></li>
+		<li><a href="#kien-truc">2. Kiến trúc</a></li>
+		<li><a href="#cai-dat">3. Cài đặt &amp; build</a></li>
+		<li><a href="#gui">4. Giao diện web</a></li>
+		<li><a href="#cli">5. Dòng lệnh (CLI)</a></li>
+		<li><a href="#nang-cap">6. Các nâng cấp #2–#12</a></li>
+		<li class="sub"><a href="#f2">#2 Phục hồi asset lệch type tree</a></li>
+		<li class="sub"><a href="#f3">#3 Cảnh báo TPK cũ</a></li>
+		<li class="sub"><a href="#f4">#4 Xác định phiên bản Unity</a></li>
+		<li class="sub"><a href="#f5">#5 Cpp2IL thử lại</a></li>
+		<li class="sub"><a href="#f6">#6 Chọn ABI Android</a></li>
+		<li class="sub"><a href="#f7">#7 Hook tiền xử lý IL2CPP</a></li>
+		<li class="sub"><a href="#f8">#8 Khôi phục giá trị khởi tạo</a></li>
+		<li class="sub"><a href="#f9">#9 CLI batch</a></li>
+		<li class="sub"><a href="#f10">#10 Giảm RAM</a></li>
+		<li class="sub"><a href="#f11">#11 Export song song</a></li>
+		<li class="sub"><a href="#f12">#12 Export chọn lọc</a></li>
+		<li><a href="#premium">7. Tính năng Premium</a></li>
+		<li><a href="#cau-hinh">8. Cấu hình &amp; định dạng file</a></li>
+		<li><a href="#api">9. HTTP API</a></li>
+		<li><a href="#mo-rong">10. Điểm mở rộng cho dev</a></li>
+		<li><a href="#ra-soat">11. Rà soát &amp; kiểm thử</a></li>
+		<li><a href="#han-che">12. Hạn chế đã biết</a></li>
+		<li><a href="#thay-doi">13. Lịch sử thay đổi</a></li>
+	</ol>
+</nav>
+
+<main id="content">
+
+<section id="tong-quan" class="hero">
+	<h1>AssetRipper — Tài liệu chức năng</h1>
+	<p class="muted">AssetRipper đọc dữ liệu game Unity (3.5 → 6000.x) rồi xuất thành project Unity hoàn chỉnh hoặc nội dung thô (PNG, WAV, GLB, JSON…). Tài liệu này mô tả toàn bộ chức năng của bản fork trên nhánh <code>feat/system-improvements</code>, bao gồm các nâng cấp #2–#12, những tính năng tương đương Premium đã làm được, CLI mới và giao diện web mới.</p>
+	<div class="chips">
+		<span class="chip"><b>Nền tảng</b>.NET 10 · C# · Native AOT</span>
+		<span class="chip"><b>Giấy phép</b>GPL-3.0</span>
+		<span class="chip"><b>Kiểm thử</b>597/597 đạt</span>
+		<span class="chip"><b>Thay đổi</b>60 file · +4.712 / −318 dòng</span>
+		<span class="chip"><b>Cập nhật</b>15/10/2026</span>
+	</div>
+</section>
+
+<div class="grid">
+	<div class="card"><div class="stat">11</div><div class="muted">nâng cấp (#2–#12) đã hoàn thành và có kiểm chứng</div></div>
+	<div class="card"><div class="stat">3 + 1</div><div class="muted">tính năng Premium được hiện thực, cộng thêm khôi phục giá trị khởi tạo IL2CPP</div></div>
+	<div class="card"><div class="stat">−48%</div><div class="muted">RAM đỉnh của CLI (1.450 → 750 MB với <code>--low-memory</code>)</div></div>
+	<div class="card"><div class="stat">−27%</div><div class="muted">thời gian export khi bật xử lý texture song song (5,3 → 3,9 giây)</div></div>
+</div>
+
+<section id="kien-truc">
+<h2>2. Kiến trúc</h2>
+<p>Dữ liệu đi qua 4 tầng. Mỗi tầng là một nhóm project riêng, nối với nhau qua <code>ExportHandler</code>.</p>
+<div class="pipeline">
+	<div class="step">IO.Files<small>bundle, serialized file, nén</small></div><span class="arrow">→</span>
+	<div class="step">Import<small>nhận diện nền tảng, Mono/IL2CPP</small></div><span class="arrow">→</span>
+	<div class="step">Processing<small>sửa assembly, tái dựng asset</small></div><span class="arrow">→</span>
+	<div class="step">Export<small>Unity project / nội dung thô</small></div><span class="arrow">→</span>
+	<div class="step">GUI.Web / CLI<small>giao diện &amp; tự động hoá</small></div>
+</div>
+<table>
+	<tr><th>Thành phần</th><th>Project</th><th>Vai trò</th></tr>
+	<tr><td>Mô hình asset</td><td><code>AssetRipper.Assets</code>, <code>AssetRipper.SourceGenerated</code> (NuGet)</td><td>Hàng nghìn lớp Unity, mỗi lớp có nhiều phiên bản, được sinh từ type tree bằng <code>AssemblyDumper</code> (khoảng 75 pass).</td></tr>
+	<tr><td>Import</td><td><code>AssetRipper.Import</code></td><td><code>GameStructure</code> → <code>PlatformGameStructure</code> → <code>IAssemblyManager</code> (Mono / IL2CPP qua Cpp2IL) → <code>GameAssetFactory</code>.</td></tr>
+	<tr><td>Processing</td><td><code>AssetRipper.Processing</code></td><td>Chuỗi <code>IAssetProcessor</code>: polyfill, sửa obfuscation, scene, prefab, sprite, lighting, và các processor mới: <em>FieldInitializerRecovery</em>, <em>StaticMeshSeparation</em>, <em>AssetPathOverride</em>.</td></tr>
+	<tr><td>Export</td><td><code>Export.UnityProjects</code>, <code>Export.PrimaryContent</code>, <code>Export.Modules.*</code></td><td>YAML/meta, texture, audio, GLB, script (ILSpy), cùng các phần mới: bộ lọc, khử trùng lặp, chuẩn bị song song.</td></tr>
+	<tr><td>Giao diện</td><td><code>GUI.Web</code>, <code>GUI.Free</code>, <code>AssetRipper.CLI</code> (mới)</td><td>Web UI chạy cục bộ tại <code>127.0.0.1</code> và CLI cho xử lý hàng loạt.</td></tr>
+</table>
+<h3>Thứ tự processor trong <code>ExportHandler.GetProcessors()</code></h3>
+<pre><code>AttributePolyfill → MonoExplicitPropertyRepair → ObfuscationRepair → ForwardingAssembly
+→ [MethodStubbing nếu Level1] → NullRefReturn → UnmanagedConstraintRecovery
+→ [NullableRemoval] → [SafePublicizing] → RemoveAssemblyKeyFile → InternalsVisibleToKeyRemover
+→ FieldInitializerRecovery            (mới, IL2CPP, Level ≤ 2)
+→ SceneDefinition → OriginalPath → MainAsset → AnimatorController → AudioMixer → EditorFormat
+→ StaticMeshSeparation                (mới, khi EnableStaticMeshSeparation)
+→ LightingData → Prefab → Sprite → ScriptableObject
+→ AssetPathOverride                   (mới, khi có file override)</code></pre>
+</section>
+
+<section id="cai-dat">
+<h2>3. Cài đặt &amp; build</h2>
+<table>
+	<tr><th>Script</th><th>Mục đích</th><th>Ghi chú</th></tr>
+	<tr><td><code>./build.sh</code></td><td>Build/publish <code>AssetRipper.GUI.Free</code> (Native AOT) trên macOS/Linux</td><td><code>-r</code>, <code>-c</code>, <code>-t</code>, <code>--clean</code>, <code>--no-aot</code>, <code>--no-classic-linker</code>, <code>-a</code>, <code>--run</code></td></tr>
+	<tr><td><code>./build.ps1</code></td><td>Cùng chức năng, cho PowerShell 7 và Windows PowerShell 5.1</td><td>Kiểm tra MSVC trước khi build AOT trên Windows</td></tr>
+	<tr><td><code>Source/generate.sh</code></td><td>Sinh lại gói <code>AssetRipper.SourceGenerated</code></td><td>Cần <code>type_tree.tpk</code>, <code>engine_assets.tpk</code>, <code>consolidated.json</code>, <code>native_enums.json</code>, <code>assemblies.json</code></td></tr>
+</table>
+<pre><code># SDK chính thức (binary portable)
+curl -sSL https://dot.net/v1/dotnet-install.sh -o dotnet-install.sh
+bash dotnet-install.sh --channel 10.0 --install-dir "$HOME/.dotnet"
+DOTNET=$HOME/.dotnet/dotnet ./build.sh -t -a     # test + build + đóng gói tar.xz
+
+# CLI (không cần AOT)
+dotnet build Source/AssetRipper.CLI -c Release</code></pre>
+<div class="note warn"><b>macOS:</b> linker của Xcode 16+ bị crash với object AOT lớn (<code>too many large addends</code>, dotnet/runtime#119380), nên script tự thêm <code>-Wl,-ld_classic</code>. Khi dùng SDK Homebrew (non-portable), script tự thêm đường dẫn <code>openssl@3</code>/<code>brotli</code> và cảnh báo rằng binary chỉ chạy được trên máy có các thư viện này. Chi tiết xem <code>docs/articles/BuildingOnMac.md</code>.</div>
+</section>
+
+<section id="gui">
+<h2>4. Giao diện web</h2>
+<p>Chạy <code>AssetRipper.GUI.Free</code>, hoặc <code>--headless --port 8080</code> để không tự mở trình duyệt. Giao diện mới dùng theme tối với thanh điều hướng cố định ở đầu trang.</p>
+<div class="grid">
+	<div class="card"><h4>🏠 Trang chủ / Dashboard</h4><p class="muted">Khi chưa nạp game: hiện nút mở thư mục hoặc file. Khi đã nạp: hiện nền tảng, scripting backend, phiên bản Unity, số asset, collection, loại asset, số asset không đọc được, và biểu đồ phân bố theo nhóm asset. Có nút đi tới trình duyệt asset và nút export.</p></div>
+	<div class="card"><h4>🗂️ Trình duyệt collection</h4><p class="muted">Lưới thẻ có thumbnail cho texture, sprite và terrain. Mỗi nhóm asset có màu riêng và một dòng thông tin, ví dụ <em>1024×1024 · ASTC_6x6</em> hay <em>824 vertices · 1 submesh</em>. Có thể lọc tức thì theo tên, class hoặc path ID (phím <kbd>/</kbd> để focus ô lọc), chuyển giữa dạng Lưới và Bảng (lựa chọn được ghi nhớ), và trang hiện 240 mục mỗi lần.</p></div>
+	<div class="card"><h4>🔎 Trang asset</h4><p class="muted">Phần đầu trang có ảnh xem trước 256 px (bấm để mở ảnh gốc) và các thông tin collection, path ID, chi tiết, đường dẫn gốc. Bên dưới là các tab có sẵn: Information, Image, Audio, Model, Text, YAML, JSON, Hex, Dependencies.</p></div>
+	<div class="card"><h4>⚙️ Cài đặt &amp; Configuration Files</h4><p class="muted">Các ô <em>Static Mesh Separation</em> và <em>Asset Deduplication</em> đã được mở khoá. Trang Configuration Files có thêm hai singleton mới là <code>ExportFilter</code> và <code>AssetPathOverrides</code>, chỉnh trực tiếp dưới dạng JSON.</p></div>
+</div>
+<h3>Thumbnail</h3>
+<ul>
+	<li>Endpoint <code>GET /Assets/Thumbnail?Path=…&amp;Size=16..512</code> (mặc định 128) trả về PNG đã thu nhỏ bằng box filter.</li>
+	<li>Kết quả được cache theo lần nạp (<code>LoadGeneration</code>), tối đa 4.096 mục, với header <code>Cache-Control: private, max-age=3600</code>.</li>
+	<li>Việc giải mã chạy tuần tự, vì dữ liệu asset được đọc từ stream dùng chung, không an toàn khi đọc song song.</li>
+	<li>Trình duyệt chỉ tải ảnh khi phần tử nằm trong vùng nhìn thấy (IntersectionObserver). Đã kiểm chứng: 4/50 ảnh được tải ở viewport 800×600 và 28/50 ở 1400×900.</li>
+</ul>
+</section>
+
+<section id="cli">
+<h2>5. Dòng lệnh (CLI)</h2>
+<p>Project mới <code>Source/AssetRipper.CLI</code>. CLI không cần mở server HTTP và dùng workstation GC.</p>
+<pre><code>AssetRipper.CLI export &lt;input&gt;... -o &lt;output&gt; [options]
+AssetRipper.CLI info   &lt;input&gt;... [--json]
+AssetRipper.CLI --help</code></pre>
+<table>
+	<tr><th>Tuỳ chọn</th><th>Ý nghĩa</th></tr>
+	<tr><td><code>-o, --output &lt;dir&gt;</code></td><td>Thư mục đích (bắt buộc với <code>export</code>)</td></tr>
+	<tr><td><code>-m, --mode unity|primary</code></td><td>Xuất Unity project (mặc định) hoặc nội dung thô</td></tr>
+	<tr><td><code>-f, --force</code></td><td>Xoá thư mục đích nếu không rỗng. Không có cờ này thì CLI dừng với lỗi; luôn từ chối thư mục gốc, home, Desktop, Documents, Downloads.</td></tr>
+	<tr><td><code>--settings &lt;file&gt;</code></td><td>Dùng <code>AssetRipper.Settings.json</code> (cùng định dạng với GUI)</td></tr>
+	<tr><td><code>--script-level 0-3</code></td><td>Mức nội dung script</td></tr>
+	<tr><td><code>--include-class / --exclude-class A,B</code></td><td>Lọc theo class (xem #12)</td></tr>
+	<tr><td><code>--include-path / --exclude-path &lt;glob&gt;</code></td><td>Lọc theo đường dẫn; có thể lặp lại</td></tr>
+	<tr><td><code>--path-overrides &lt;file&gt;</code></td><td>Đổi đường dẫn xuất của từng asset (Premium)</td></tr>
+	<tr><td><code>--dedupe</code></td><td>Khử trùng lặp asset giữa các bundle (Premium)</td></tr>
+	<tr><td><code>-j, --threads &lt;n&gt;</code></td><td>Số luồng xử lý texture (1 = tuần tự)</td></tr>
+	<tr><td><code>--low-memory</code></td><td>Giới hạn giải nén trong RAM ở 4 MB và xử lý tuần tự</td></tr>
+	<tr><td><code>--log &lt;file&gt;</code>, <code>-q</code>, <code>--json</code></td><td>Ghi log ra file / chỉ in cảnh báo và lỗi / in JSON (với <code>info</code>)</td></tr>
+</table>
+<p><b>Mã thoát:</b> <code>0</code> thành công · <code>1</code> sai tham số · <code>2</code> không tìm thấy asset · <code>3</code> export lỗi.</p>
+<pre><code>$ AssetRipper.CLI info game.apk --json
+{ "platform": "Android", "scriptingBackend": "IL2Cpp", "projectVersion": "6000.3.26f1",
+  "collections": 15, "assets": 825, "unreadable": 0, "assetsByClass": { "MonoScript": 656, ... } }
+
+$ AssetRipper.CLI export game.apk -o out --include-class Texture2D,Sprite -f -q
+Exported to /…/out
+Time: 00:00:02.4 | Memory: 548 MB | Managed heap peak: 112 MB | Warnings: 2 | Errors: 0</code></pre>
+</section>
+
+<section id="nang-cap">
+<h2>6. Các nâng cấp #2–#12</h2>
+<table>
+	<tr><th>#</th><th>Nâng cấp</th><th>Trạng thái</th><th>Bằng chứng</th></tr>
+	<tr><td>2</td><td>Phục hồi asset khi type tree lệch</td><td><span class="badge ok">Hoàn thành</span></td><td>Tạo lại được <code>ProjectSettings.asset</code> cho Unity 6000.3.26 (trước đây bị thiếu); có test với fixture thật</td></tr>
+	<tr><td>3</td><td>Cảnh báo dữ liệu TPK cũ hơn game</td><td><span class="badge ok">Hoàn thành</span></td><td>Log: <em>“Unity 6000.3.26f1 is newer than the embedded type tree data…”</em></td></tr>
+	<tr><td>4</td><td>Thêm nguồn xác định phiên bản Unity</td><td><span class="badge ok">Hoàn thành</span></td><td>Thứ tự nguồn: platform → file game → Cpp2IL</td></tr>
+	<tr><td>5</td><td>Cpp2IL thử lại, không mất toàn bộ script</td><td><span class="badge ok">Hoàn thành</span></td><td>Thử mọi tổ hợp binary × phiên bản; nếu hết cách thì báo <code>AggregateException</code> rõ ràng</td></tr>
+	<tr><td>6</td><td>Chọn ABI Android theo thứ tự ưu tiên</td><td><span class="badge ok">Hoàn thành</span></td><td>Log: <em>Using IL2CPP binary 'arm64-v8a/libil2cpp.so'</em>; test thứ tự</td></tr>
+	<tr><td>7</td><td>Hook tiền xử lý metadata/binary</td><td><span class="badge ok">Hoàn thành</span></td><td>Log: <em>IL2CPP metadata header OK (format version 39)</em></td></tr>
+	<tr><td>8</td><td>Khôi phục giá trị khởi tạo field</td><td><span class="badge ok">Hoàn thành</span></td><td><code>public int score = 42;</code>, <code>hp = 100</code> (khôi phục 6 field trong 2 type)</td></tr>
+	<tr><td>9</td><td>CLI batch</td><td><span class="badge ok">Hoàn thành</span></td><td>Lệnh <code>export</code>/<code>info</code>, 15 test</td></tr>
+	<tr><td>10</td><td>Giảm RAM</td><td><span class="badge ok">Hoàn thành</span></td><td>RSS đỉnh 1.450 → 979 MB (mặc định) → 750 MB (<code>--low-memory</code>)</td></tr>
+	<tr><td>11</td><td>Export song song</td><td><span class="badge ok">Hoàn thành</span></td><td>5,3 → 3,9 giây; 49/49 PNG giống từng byte so với chạy tuần tự</td></tr>
+	<tr><td>12</td><td>Export chọn lọc theo class/glob</td><td><span class="badge ok">Hoàn thành</span></td><td>Chỉ xuất Texture2D và Sprite; có test export thật</td></tr>
+</table>
+
+<h3 id="f2"><span class="feature-id">#2</span>Phục hồi asset khi type tree lệch</h3>
+<p>Các engine asset không có code sinh sẵn (ví dụ PlayerSettings) được đọc bằng type tree lấy từ TPK. Khi Unity đổi layout trong một bản patch mà TPK chưa có bản đó, trước đây toàn bộ object bị bỏ (<code>UnreadableObject</code>). Giờ <code>GameAssetFactory.TryRecoverTypeTreeObject</code> xử lý theo hai bước:</p>
+<ol>
+	<li>Thử mọi type tree khác của class đó, ưu tiên phiên bản gần nhất, và nhận tree nào đọc khớp đúng số byte.</li>
+	<li>Nếu không có tree nào khớp, đọc lần lượt từng field (<code>SerializableStructure.ReadPartially</code>), giữ lại các field đọc được, các field còn lại lấy giá trị mặc định.</li>
+</ol>
+<p>Kèm theo là một bản sửa lỗi: <code>SerializableStructure.Reset()</code> trước đây không làm gì với field dạng primitive, vì <code>foreach</code> chạy trên bản sao của struct.</p>
+<pre><code>Import [Warning] : PlayerSettings in globalgamemanagers (Unity 6000.3.26f1) was partially recovered:
+90/176 fields read before field 'macAppStoreCategory' at byte 436/896. The remaining fields use default values.</code></pre>
+
+<h3 id="f3"><span class="feature-id">#3</span>Cảnh báo khi dữ liệu TPK cũ hơn game</h3>
+<p><code>TypeTreeNodeStruct.IsCoveredByTpk</code> so phiên bản của từng collection với bản mới nhất cùng dòng major.minor có trong TPK. <code>GameStructure</code> cảnh báo một lần cho mỗi phiên bản chưa được bao phủ.</p>
+
+<h3 id="f4"><span class="feature-id">#4</span>Thêm nguồn xác định phiên bản Unity</h3>
+<p><code>PlatformGameStructure.TryGetUnityVersionFromGameFiles()</code> đọc header của <code>globalgamemanagers</code>, <code>mainData</code>, <code>level0</code> và các file đã thu thập. <code>IL2CppManager</code> chỉ hỏi Cpp2IL khi không còn nguồn nào khác, nhờ vậy cũng tránh được log thừa của Cpp2IL lẫn vào stdout.</p>
+
+<h3 id="f5"><span class="feature-id">#5</span>Cpp2IL thử lại, không mất toàn bộ script</h3>
+<p>Với mỗi binary ứng viên (<code>Il2CppGameAssemblyCandidates</code>) và mỗi phiên bản ứng viên, IL2CppManager chạy tiền xử lý rồi gọi <code>InitializeLibCpp2Il(byte[], byte[])</code>. Nếu lỗi thì reset trạng thái Cpp2IL và thử tổ hợp tiếp theo. Khi mọi tổ hợp đều thất bại mới chuyển sang <code>BaseManager</code>, với thông báo nêu rõ số tổ hợp đã thử.</p>
+
+<h3 id="f6"><span class="feature-id">#6</span>Chọn ABI Android theo thứ tự ưu tiên</h3>
+<p>Thứ tự: <code>arm64-v8a → armeabi-v7a → x86_64 → x86 → armeabi</code>. Kết quả không còn phụ thuộc thứ tự liệt kê file của hệ thống, và mọi binary tìm được đều được giữ lại làm phương án dự phòng cho #5.</p>
+
+<h3 id="f7"><span class="feature-id">#7</span>Hook tiền xử lý IL2CPP</h3>
+<p>Giao diện <code>IIl2CppInputPreprocessor</code> nhận một <code>Il2CppInput</code> gồm Binary, Metadata (byte) và UnityVersion; preprocessor có thể sửa các giá trị này trước khi Cpp2IL parse. Mặc định có sẵn <code>MetadataHeaderDiagnostic</code>: nó kiểm tra magic <code>0xFAB11BAF</code>, và nếu metadata bị mã hoá hay đổi định dạng thì báo rõ thay vì để Cpp2IL lỗi khó hiểu. Đăng ký thêm qua <code>IL2CppManager.InputPreprocessors</code>.</p>
+
+<h3 id="f8"><span class="feature-id">#8</span>Khôi phục giá trị khởi tạo field (IL2CPP)</h3>
+<p><code>FieldInitializerRecoveryProcessor</code> thu thập giá trị đã serialize của mọi MonoBehaviour, kể cả class <code>[Serializable]</code> lồng nhau. Với mỗi field primitive, enum hoặc string, nó chọn giá trị phổ biến nhất (khi ≥ 50% instance dùng giá trị đó và giá trị khác mặc định), rồi sinh IL cho constructor rỗng. ILSpy hiển thị kết quả dưới dạng giá trị khởi tạo. Constructor có thân thật (game Mono) không bao giờ bị thay.</p>
+<pre><code>public class TestBehaviour : MonoBehaviour      [Serializable] public class Stats
+{                                              {
+    public int score = 42;                         public int hp = 100;
+    [SerializeField] private string playerName     public float speed = 3.5f;
+        = "AssetRipper";                           public string title = "hero";
+    public Faction faction = Faction.Blue;     }
+    …</code></pre>
+
+<h3 id="f9"><span class="feature-id">#9</span>CLI batch</h3>
+<p>Xem <a href="#cli">mục 5</a>. Phần phân tích tham số (<code>CliOptions</code>) và kiểm tra an toàn thư mục (<code>PrepareOutputDirectory</code>) có test riêng.</p>
+
+<h3 id="f10"><span class="feature-id">#10</span>Giảm RAM</h3>
+<table>
+	<tr><th>Cấu hình (rich.apk, 51 MB, 48 texture 1024²)</th><th>RSS đỉnh</th><th>Thời gian</th></tr>
+	<tr><td>Server GC (trước đây)</td><td>1.450 MB</td><td>3,6 s</td></tr>
+	<tr><td>Workstation GC, song song (mặc định của CLI)</td><td>979–1.055 MB</td><td>3,9–4,1 s</td></tr>
+	<tr><td><code>-j 1</code></td><td>750 MB</td><td>5,2 s</td></tr>
+	<tr><td><code>--low-memory</code></td><td>750 MB</td><td>5,0 s</td></tr>
+</table>
+<p><code>BundleMemoryOptions</code> cho phép cấu hình ngưỡng giải nén bundle vào RAM (mặc định 50 MB, low-memory 4 MB); vượt ngưỡng thì dùng file tạm. Hai cách khác từng được thử là ép GC compaction và xoá stream cache, nhưng chúng làm RSS tăng (889 và 822 MB) nên đã bị loại.</p>
+
+<h3 id="f11"><span class="feature-id">#11</span>Export song song</h3>
+<p><code>IPreparableExportCollection</code> chia việc export thành ba bước: (1) đọc dữ liệu tuần tự, vì stream dùng chung không an toàn khi đọc song song; (2) xử lý song song phần nặng CPU, tức giải mã và mã hoá texture; (3) ghi file tuần tự. Tên file, GUID và container chỉ được đụng tới ở bước 3, nên output giống hệt khi chạy tuần tự. Mỗi cửa sổ xử lý bị giới hạn bởi <code>PreparationMemoryBudget</code> (256 MB) và <code>MaxDegreeOfParallelism × 4</code> collection.</p>
+
+<h3 id="f12"><span class="feature-id">#12</span>Export chọn lọc</h3>
+<p><code>ExportFilter</code> có bốn danh sách: <code>IncludeClasses</code>, <code>ExcludeClasses</code>, <code>IncludePaths</code>, <code>ExcludePaths</code>. Glob hỗ trợ <code>*</code>, <code>**</code>, <code>?</code>; tên class không phân biệt hoa thường. Bộ lọc áp dụng cho cả hai chế độ export. Collection bị lọc vẫn được đăng ký với container nên tham chiếu tới nó vẫn giữ GUID ổn định, chỉ là file không được ghi.</p>
+</section>
+
+<section id="premium">
+<h2>7. Tính năng Premium</h2>
+<p>Bảng dưới đối chiếu danh sách trong <code>docs/articles/PremiumFeatures.md</code> với phần đã hiện thực ở bản fork này. GPL-3.0 cho phép tự hiện thực các tính năng này; mã Premium gốc không được dùng.</p>
+<table>
+	<tr><th>Tính năng</th><th>Trạng thái</th><th>Mô tả / bằng chứng</th></tr>
+	<tr><td>Asset Path Overrides</td><td><span class="badge ok">Đã làm</span></td><td>File JSON <code>Files → collection → pathID → đường dẫn</code>, đường dẫn được kiểm tra an toàn (từ chối đường dẫn tuyệt đối và <code>..</code>). Có test export thật: <code>Assets/Models/Renamed.asset</code>.</td></tr>
+	<tr><td>Asset Deduplication</td><td><span class="badge ok">Đã làm</span></td><td>Áp dụng cho TextAsset, AudioClip, Mesh, Shader và Texture không có sprite. So sánh bằng <code>AssetEqualityComparer</code>; bản trùng được trỏ về bản gốc qua <code>AliasExportCollection</code>. Test: 2 bundle cùng một mesh → 1 file; nội dung khác nhau → 2 file.</td></tr>
+	<tr><td>Static Mesh Separation</td><td><span class="badge ok">Đã làm</span></td><td>Tách phần submesh của từng renderer khỏi “Combined Mesh”, đưa về không gian local (vị trí, normal, tangent, xử lý cả transform bị lật), gộp các hình học giống nhau, và tái sử dụng mesh gốc nếu có. Trên build 6000.3.26: 9 renderer → 3 mesh; bounds đúng kích thước gốc (cube ±0,5; cylinder 0,5×1×0,5); StaticBatchInfo được xoá còn cờ static vẫn giữ.</td></tr>
+	<tr><td>Traditional IL2CPP Analysis</td><td><span class="badge warn">Một phần</span></td><td>Chưa dựng lại được thân method từ mã máy. Đã có bước đầu: khôi phục giá trị khởi tạo field (#8), hook <code>RecoveryProcessingLayers</code> và hook tiền xử lý (#7).</td></tr>
+	<tr><td>Prefab Outlining</td><td><span class="badge bad">Chưa làm</span></td><td>Cần nhận diện các cây GameObject lặp lại và sinh PrefabInstance kèm modification. Đây là việc lớn, nằm ngoài phạm vi đợt này.</td></tr>
+	<tr><td>Shader Decompilation</td><td><span class="badge bad">Chưa làm</span></td><td>Cần trình dịch ngược DXBC/SPIR-V/Metal sang HLSL. Đây là một dự án riêng.</td></tr>
+	<tr><td>User Defined Package Export</td><td><span class="badge bad">Chưa làm</span></td><td>Cần dữ liệu khai thác (mining) package do người dùng cung cấp. Đã có sẵn hạ tầng singleton để lưu dữ liệu này.</td></tr>
+</table>
+</section>
+
+<section id="cau-hinh">
+<h2>8. Cấu hình &amp; định dạng file</h2>
+<h3>ExportFilter (Configuration Files → Singleton <code>ExportFilter</code>)</h3>
+<pre><code>{
+  "IncludeClasses": ["Texture2D", "AudioClip"],
+  "ExcludeClasses": [],
+  "IncludePaths": ["Assets/**"],
+  "ExcludePaths": ["**/Temp/**"]
+}</code></pre>
+<h3>AssetPathOverrides (Singleton <code>AssetPathOverrides</code> hoặc <code>--path-overrides</code>)</h3>
+<pre><code>{
+  "Files": {
+    "level1.assets": { "12": "Assets/Images/MyTexture.png" },
+    "cab-bcaf22789432bda1e5d0eea9d2521ddd": { "4476349470337976665": "Assets/AssetRenamed.txt" }
+  }
+}</code></pre>
+<h3>Thiết lập liên quan</h3>
+<table>
+	<tr><th>Thiết lập</th><th>Mặc định</th><th>Ảnh hưởng</th></tr>
+	<tr><td><code>ProcessingSettings.EnableStaticMeshSeparation</code></td><td>true</td><td>Bật StaticMeshSeparationProcessor</td></tr>
+	<tr><td><code>ProcessingSettings.EnableAssetDeduplication</code></td><td>false</td><td>Bật khử trùng lặp khi export Unity project</td></tr>
+	<tr><td><code>ImportSettings.ScriptContentLevel</code></td><td>Level2</td><td>Khôi phục giá trị khởi tạo (#8) chạy ở Level1–2 với game IL2CPP</td></tr>
+	<tr><td><code>ExportHandler.MaxDegreeOfParallelism</code></td><td>số CPU</td><td>Số luồng chuẩn bị texture (#11)</td></tr>
+	<tr><td><code>BundleMemoryOptions.MaxInMemoryDecompressedSize</code></td><td>50 MB</td><td>Ngưỡng dùng file tạm khi giải nén bundle (#10)</td></tr>
+</table>
+</section>
+
+<section id="api">
+<h2>9. HTTP API</h2>
+<p>Server chỉ lắng nghe tại <code>127.0.0.1</code>. Danh sách đầy đủ xem tại <code>/swagger</code>.</p>
+<table>
+	<tr><th>Phương thức</th><th>Đường dẫn</th><th>Chức năng</th></tr>
+	<tr><td>POST</td><td><code>/LoadFile</code>, <code>/LoadFolder</code>, <code>/Reset</code></td><td>Nạp và giải phóng dữ liệu game (form <code>Path=</code>)</td></tr>
+	<tr><td>POST</td><td><code>/Export/UnityProject</code>, <code>/Export/PrimaryContent</code></td><td>Export (form <code>Path=</code>)</td></tr>
+	<tr><td>GET</td><td><code>/Bundles/View</code>, <code>/Collections/View</code>, <code>/Collections/Count</code>, <code>/Scenes/View</code>, <code>/Resources/View</code></td><td>Duyệt dữ liệu</td></tr>
+	<tr><td>GET</td><td><code>/Assets/View</code>, <code>/Assets/Image</code>, <b><code>/Assets/Thumbnail</code></b> (mới), <code>/Assets/Audio</code>, <code>/Assets/Model.glb</code>, <code>/Assets/Font</code>, <code>/Assets/Video</code>, <code>/Assets/Json</code>, <code>/Assets/Yaml</code>, <code>/Assets/Text</code>, <code>/Assets/Binary</code></td><td>Nội dung từng asset (<code>Path=</code> JSON)</td></tr>
+	<tr><td>GET/POST</td><td><code>/Settings/Edit</code>, <code>/Settings/Update</code>, <code>/ConfigurationFiles/*</code></td><td>Cài đặt và file cấu hình</td></tr>
+</table>
+<div class="note bad"><b>Bảo mật:</b> API không có xác thực, và các endpoint POST nhận form <code>x-www-form-urlencoded</code>, loại request mà trình duyệt gửi được mà không cần preflight. Vì vậy một trang web độc hại có thể khiến trình duyệt gọi export, kèm thao tác xoá thư mục ở chế độ headless. Lỗ hổng này (mục #1, nằm ngoài phạm vi đợt này) chưa được sửa: không nên mở port ra mạng và không nên dùng <code>--headless</code> trong khi đang duyệt web.</div>
+</section>
+
+<section id="mo-rong">
+<h2>10. Điểm mở rộng cho dev</h2>
+<table>
+	<tr><th>Điểm mở rộng</th><th>Vị trí</th><th>Dùng để</th></tr>
+	<tr><td><code>IIl2CppInputPreprocessor</code> / <code>IL2CppManager.InputPreprocessors</code></td><td>Import</td><td>Sửa binary/metadata trước khi Cpp2IL parse</td></tr>
+	<tr><td><code>IL2CppManager.RecoveryProcessingLayers</code></td><td>Import</td><td>Thêm layer phân tích method (Level3)</td></tr>
+	<tr><td><code>ExportHandler.GetProcessors()</code> (virtual)</td><td>Export.UnityProjects</td><td>Thêm hoặc bớt <code>IAssetProcessor</code></td></tr>
+	<tr><td><code>IPreparableExportCollection</code></td><td>Export.UnityProjects</td><td>Đưa phần việc nặng CPU của collection mới vào xử lý song song</td></tr>
+	<tr><td><code>ProjectExporter.AssetFilter</code>, <code>DeduplicateAssets</code></td><td>Export.UnityProjects</td><td>Bộ lọc và khử trùng lặp khi gọi bằng code</td></tr>
+	<tr><td><code>Thumbnails.Create(bitmap, maxSize)</code></td><td>Export.Modules.Textures</td><td>Tạo ảnh xem trước</td></tr>
+</table>
+</section>
+
+<section id="ra-soat">
+<h2>11. Rà soát &amp; kiểm thử</h2>
+<div class="grid">
+	<div class="card"><h4>Unit test</h4><div class="stat">597 / 597</div><p class="muted">8 project test. Trong đó AssetRipper.Tests có 241 test (trước đây 173); 68 test mới thuộc ImportRobustness, CliOptions, ExportCustomization, FieldInitializerRecovery và StaticMeshSeparation.</p></div>
+	<div class="card"><h4>Build</h4><div class="stat">AOT ✓</div><p class="muted">Release Native AOT osx-arm64 build thành công, không phát sinh cảnh báo trim/AOT mới từ code thêm vào.</p></div>
+	<div class="card"><h4>End-to-end</h4><div class="stat">3 APK</div><p class="muted"><code>ripper.apk</code>, <code>rich.apk</code>, <code>static.apk</code> (Unity 6000.3.26f1, IL2CPP arm64): 0 lỗi, chỉ 2 cảnh báo dự kiến.</p></div>
+</div>
+<h3>Phát hiện trong quá trình rà soát và đã sửa</h3>
+<ul>
+	<li><code>SerializableStructure.Reset()</code> không có tác dụng với field primitive (đã sửa, có test).</li>
+	<li>FieldInitializerRecovery nạp structure của script hệ thống (GUISkin) và sinh thêm một cảnh báo; đã sửa bằng cách resolve type trước khi nạp.</li>
+	<li>Trang collection trước đây render mọi asset hai lần (lưới và bảng); giờ bảng được dựng khi cần, mỗi trang 240 mục, ảnh tải lười.</li>
+	<li>Tuỳ chọn <code>--low-memory</code> ban đầu có ép GC compaction, việc này làm RSS tăng nên đã bỏ (mức hiện tại 750 MB).</li>
+	<li>Trên macOS, <code>PeakWorkingSet64</code> luôn trả 0; CLI chuyển sang hiển thị working set hiện tại cùng đỉnh managed heap.</li>
+</ul>
+<h3>Cách tái kiểm tra</h3>
+<pre><code>dotnet test AssetRipper.slnx                         # 597 test
+DOTNET=$HOME/.dotnet/dotnet ./build.sh                # Native AOT
+dotnet Source/0Bins/AssetRipper.CLI/Debug/AssetRipper.CLI.dll export game.apk -o out -f --log out.log</code></pre>
+</section>
+
+<section id="han-che">
+<h2>12. Hạn chế đã biết</h2>
+<ul>
+	<li><b>TPK chưa có Unity 6000.3.21–6000.3.26:</b> PlayerSettings chỉ đọc được 90/176 field. Cách sửa gốc là bổ sung dump type tree vào <code>AssetRipper/Tpk</code> rồi chạy <code>generate.sh</code>.</li>
+	<li><b>Thân method IL2CPP:</b> vẫn rỗng ở bản Free; chỉ có field và giá trị khởi tạo.</li>
+	<li><b>Export không tất định:</b> GUID của scene/DLL và MVID thay đổi giữa các lần chạy. Hạn chế này có từ trước, không do thay đổi song song gây ra.</li>
+	<li><b><code>-ld_classic</code></b> đã bị Apple đánh dấu deprecated; nếu Xcode gỡ hẳn thì dùng <code>--no-aot</code>.</li>
+	<li><b>Web API không có xác thực / CSRF</b> (xem mục 9).</li>
+	<li><b>Thumbnail</b> được giải mã tuần tự, nên lần đầu xem collection rất lớn sẽ chậm; các lần sau dùng cache.</li>
+</ul>
+</section>
+
+<section id="thay-doi">
+<h2>13. Lịch sử thay đổi</h2>
+<table>
+	<tr><th>Commit</th><th>Nội dung</th></tr>
+	<tr><td><code>17e8a4687</code></td><td>generate.sh đa nền tảng</td></tr>
+	<tr><td><code>d0b155547</code></td><td>build.sh / build.ps1 và hướng dẫn build trên macOS</td></tr>
+	<tr><td><code>0d6724bd5</code></td><td>build.ps1 hỗ trợ Windows PowerShell 5.1</td></tr>
+	<tr><td><code>43267cf2f</code></td><td>Import: phục hồi asset, fallback IL2CPP, chẩn đoán (#2–#7)</td></tr>
+	<tr><td><code>9665a76d9</code></td><td>CLI, bộ lọc export, path overrides (#9, #12, Premium)</td></tr>
+	<tr><td><code>8829d70e1</code></td><td>Texture song song, chế độ ít RAM (#10, #11)</td></tr>
+	<tr><td><code>8273b11c8</code></td><td>Khôi phục giá trị khởi tạo IL2CPP (#8)</td></tr>
+	<tr><td><code>ee29f7162</code></td><td>Giao diện mới, thumbnail, dashboard</td></tr>
+	<tr><td><code>c6beb7724</code></td><td>Asset deduplication (Premium)</td></tr>
+	<tr><td><code>b792bb67c</code></td><td>Static mesh separation (Premium)</td></tr>
+	<tr><td><code>d959d35d1</code></td><td>Sửa lỗi phát hiện khi rà soát: ảnh tải lười, bảng dựng phía client</td></tr>
+</table>
+</section>
+
+<footer>AssetRipper fork · nhánh <code>feat/system-improvements</code> · Tài liệu được viết thủ công dựa trên mã nguồn và kết quả chạy thực tế trên macOS arm64, .NET 10.0.402, Unity 6000.3.26f1.</footer>
+</main>
+</div>
+<script>
+(function () {
+	const links = Array.from(document.querySelectorAll('#tocList a'));
+	const sections = links.map(a => document.querySelector(a.getAttribute('href'))).filter(Boolean);
+	const observer = new IntersectionObserver(entries => {
+		entries.forEach(e => {
+			if (e.isIntersecting) {
+				links.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + e.target.id));
+			}
+		});
+	}, { rootMargin: '-10% 0px -80% 0px' });
+	sections.forEach(s => observer.observe(s));
+
+	const q = document.getElementById('q');
+	const blocks = Array.from(document.querySelectorAll('#content section, #content > .grid'));
+	q.addEventListener('input', () => {
+		const text = q.value.trim().toLowerCase();
+		blocks.forEach(b => b.classList.toggle('hidden-by-search', !!text && !b.textContent.toLowerCase().includes(text)));
+		links.forEach(a => {
+			const target = document.querySelector(a.getAttribute('href'));
+			const section = target && (target.closest('section') || target);
+			a.parentElement.classList.toggle('hidden-by-search', !!text && section && section.classList.contains('hidden-by-search'));
+		});
+	});
+})();
+</script>
+</body>
+</html>
