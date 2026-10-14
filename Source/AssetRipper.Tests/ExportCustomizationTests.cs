@@ -115,6 +115,38 @@ public class ExportCustomizationTests
 		}
 	}
 
+	[TestCase(true, 1)]
+	[TestCase(false, 2)]
+	public void IdenticalAssetsInDifferentBundlesAreDeduplicated(bool enabled, int expectedFiles)
+	{
+		GameBundle bundle = new();
+		ProcessedAssetCollection first = bundle.AddNewProcessedCollection("bundle_a", UnityVersion.V_2022);
+		ProcessedAssetCollection second = bundle.AddNewProcessedCollection("bundle_b", UnityVersion.V_2022);
+		first.CreateMesh().Name = "Shared";
+		second.CreateMesh().Name = "Shared";
+
+		VirtualFileSystem fileSystem = Export(first, s => s.Configuration.ProcessingSettings.EnableAssetDeduplication = enabled);
+
+		string[] meshes = fileSystem.Directory.GetFiles("/output/ExportedProject/Assets/Mesh", "*.asset", SearchOption.TopDirectoryOnly);
+		Assert.That(meshes, Has.Length.EqualTo(expectedFiles));
+	}
+
+	[Test]
+	public void DifferentAssetsWithSameNameAreKept()
+	{
+		GameBundle bundle = new();
+		ProcessedAssetCollection first = bundle.AddNewProcessedCollection("bundle_a", UnityVersion.V_2022);
+		ProcessedAssetCollection second = bundle.AddNewProcessedCollection("bundle_b", UnityVersion.V_2022);
+		first.CreateMesh().Name = "Shared";
+		IMesh other = second.CreateMesh();
+		other.Name = "Shared";
+		other.FillWithCompressedMeshData(MeshData.CreateTriangleMesh());
+
+		VirtualFileSystem fileSystem = Export(first, s => s.Configuration.ProcessingSettings.EnableAssetDeduplication = true);
+
+		Assert.That(fileSystem.Directory.GetFiles("/output/ExportedProject/Assets/Mesh", "*.asset", SearchOption.TopDirectoryOnly), Has.Length.EqualTo(2));
+	}
+
 	[TestCase("Assets/A.png", "Assets/A.png")]
 	[TestCase("Assets\\Sub\\A.png", "Assets/Sub/A.png")]
 	[TestCase("/etc/passwd", null)]

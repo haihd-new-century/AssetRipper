@@ -146,6 +146,11 @@ internal static class Program
 			settings.ImportSettings.ScriptContentLevel = level;
 		}
 
+		if (options.Deduplicate)
+		{
+			settings.ProcessingSettings.EnableAssetDeduplication = true;
+		}
+
 		ExportFilter filter = new();
 		filter.IncludeClasses.AddRange(options.IncludeClasses);
 		filter.ExcludeClasses.AddRange(options.ExcludeClasses);

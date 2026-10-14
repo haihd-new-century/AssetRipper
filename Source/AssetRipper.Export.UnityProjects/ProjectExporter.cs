@@ -31,6 +31,11 @@ public sealed partial class ProjectExporter
 	public int MaxDegreeOfParallelism { get; set; } = Environment.ProcessorCount;
 
 	/// <summary>
+	/// Merge identical assets duplicated across bundles into one exported file (see <see cref="AssetDeduplication"/>).
+	/// </summary>
+	public bool DeduplicateAssets { get; set; }
+
+	/// <summary>
 	/// Upper bound for raw input data held in memory by one preparation window.
 	/// </summary>
 	public long PreparationMemoryBudget { get; set; } = 256L * 1024 * 1024;
@@ -95,6 +100,10 @@ public sealed partial class ProjectExporter
 	{
 		EventExportPreparationStarted?.Invoke();
 		List<IExportCollection> collections = CreateCollections(fileCollection);
+		if (DeduplicateAssets)
+		{
+			AssetDeduplication.Deduplicate(collections);
+		}
 		EventExportPreparationFinished?.Invoke();
 
 		EventExportStarted?.Invoke();
