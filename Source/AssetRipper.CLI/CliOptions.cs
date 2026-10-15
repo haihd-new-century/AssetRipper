@@ -27,6 +27,7 @@ internal sealed class CliOptions
 	public bool Deduplicate { get; set; }
 	public string? PackagesFile { get; set; }
 	public string? ShaderMode { get; set; }
+	public bool OutlinePrefabs { get; set; }
 	public int? Threads { get; set; }
 
 	public const string Usage = """
@@ -53,6 +54,7 @@ internal sealed class CliOptions
 		  -j, --threads <n>           Threads for texture conversion (default: CPU count, 1 = sequential)
 		      --low-memory            Keep less data in RAM (temp files for bundles, smaller batches)
 		      --dedupe                Merge identical assets duplicated across bundles into one file
+		      --outline-prefabs       Create prefabs for hierarchies repeated in scenes
 		      --shaders <mode>        dummy | yaml | decompile (GLSL reconstruction for GL/GLES builds)
 		      --packages <file.json>  Reference scripts/assets from user-defined Unity packages instead of exporting them
 
@@ -166,6 +168,9 @@ internal sealed class CliOptions
 					break;
 				case "--packages":
 					options.PackagesFile = NextValue(arg);
+					break;
+				case "--outline-prefabs":
+					options.OutlinePrefabs = true;
 					break;
 				case "--dedupe":
 					options.Deduplicate = true;

@@ -146,6 +146,10 @@ internal static class Program
 			settings.ImportSettings.ScriptContentLevel = level;
 		}
 
+		if (options.OutlinePrefabs)
+		{
+			settings.ProcessingSettings.EnablePrefabOutlining = true;
+		}
 		if (options.Deduplicate)
 		{
 			settings.ProcessingSettings.EnableAssetDeduplication = true;
