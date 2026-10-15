@@ -120,7 +120,7 @@
     "asset_tab_hex": "Δεκαεξαδικό",
     "audio_clip": "Κομμάτι Ήχου (AudioClip)",
     "audio_format_force_wav_description": "Μετατροπή όλων των αρχείων ήχου σε αρχεία WAV. Δεν συνιστάται αν είναι να τα βάλεις στο Unity, καθώς μπορεί να επανασυμπιέσει αρχεία, προκαλώντας απώλεια ποιότητας.",
-    "asset_ripper_free": "AssetRipper Δωρεάν",
+    "asset_ripper_free": "AssetRipper Freemium",
     "asset_ripper_premium": "AssetRipper Premium",
     "assembly_name": "Όνομα Assembly",
     "asset_bundle_name": "Όνομα Asset Bundle",

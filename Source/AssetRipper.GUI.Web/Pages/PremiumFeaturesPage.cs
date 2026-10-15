@@ -44,7 +44,22 @@ public sealed class PremiumFeaturesPage : DefaultPage
 						_ => null,
 					});
 				}
+				WriteAvailable(writer, "Prefab Outlining", Localization.EnablePrefabOutlining);
+				WriteAvailable(writer, "Il2Cpp Analysis", $"{Localization.ScriptContentLevelTitle}: {Localization.ScriptContentLevel3}");
+				WriteAvailable(writer, "Asset Path Overrides", $"{Localization.ConfigurationFiles}: AssetPathOverrides");
+				WriteAvailable(writer, "User-Defined Package Export", $"{Localization.ConfigurationFiles}: PackageMappings");
+				WriteAvailable(writer, "Asset Deduplication", Localization.EnableAssetDeduplication);
 			}
+		}
+	}
+
+	/// <summary>A feature that is always available in the Freemium edition, with where to enable it.</summary>
+	private static void WriteAvailable(TextWriter writer, string feature, string howToEnable)
+	{
+		using (new Tr(writer).End())
+		{
+			new Th(writer).Close(feature);
+			new Td(writer).Close($"{Localization.Supported} · {howToEnable}");
 		}
 	}
 
@@ -55,7 +70,8 @@ public sealed class PremiumFeaturesPage : DefaultPage
 
 	private static bool ShaderDecompilationSupported(GPUPlatform platform)
 	{
-		return platform is GPUPlatform.Vulkan || (platform.IsDirectX() && OperatingSystem.IsWindows()) || platform.IsOpenGL();
+		// The Freemium decompiler reconstructs GLSL programs (OpenGL / GLES). DirectX, Metal and Vulkan fall back to dummy shaders.
+		return platform.IsOpenGL();
 	}
 
 	private static FeatureStatus GetFeatureStatus<T>(Func<T, bool>? needsFeatureFunction, Func<T, bool>? isSupportedFunction)
