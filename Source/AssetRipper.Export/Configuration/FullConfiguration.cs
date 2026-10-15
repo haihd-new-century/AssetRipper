@@ -38,6 +38,15 @@ public class FullConfiguration : CoreConfiguration
 		set => SingletonData.SetStoredValue(nameof(AssetPathOverrides), value);
 	}
 
+	/// <summary>
+	/// Packages whose scripts and assets are referenced instead of exported (User-Defined Package Export). Empty by default.
+	/// </summary>
+	public PackageMappings PackageMappings
+	{
+		get => SingletonData.GetStoredValue<PackageMappings>(nameof(PackageMappings));
+		set => SingletonData.SetStoredValue(nameof(PackageMappings), value);
+	}
+
 	public bool SaveSettingsToDisk => ExportSettings.SaveSettingsToDisk;
 
 	public string? LanguageCode
@@ -53,6 +62,7 @@ public class FullConfiguration : CoreConfiguration
 		SingletonData.Add(nameof(EngineResourceData), new JsonDataInstance<EngineResourceData?>(EngineResourceDataContext.Default.NullableEngineResourceData));
 		SingletonData.Add(nameof(ExportFilter), new JsonDataInstance<ExportFilter>(ExportFilterContext.Default.ExportFilter));
 		SingletonData.Add(nameof(AssetPathOverrides), new JsonDataInstance<AssetPathOverrides>(AssetPathOverridesContext.Default.AssetPathOverrides));
+		SingletonData.Add(nameof(PackageMappings), new JsonDataInstance<PackageMappings>(PackageMappingsContext.Default.PackageMappings));
 	}
 
 	public override void LogConfigurationValues()

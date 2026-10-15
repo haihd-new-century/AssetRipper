@@ -25,6 +25,7 @@ internal sealed class CliOptions
 	public bool Help { get; set; }
 	public bool LowMemory { get; set; }
 	public bool Deduplicate { get; set; }
+	public string? PackagesFile { get; set; }
 	public int? Threads { get; set; }
 
 	public const string Usage = """
@@ -51,6 +52,7 @@ internal sealed class CliOptions
 		  -j, --threads <n>           Threads for texture conversion (default: CPU count, 1 = sequential)
 		      --low-memory            Keep less data in RAM (temp files for bundles, smaller batches)
 		      --dedupe                Merge identical assets duplicated across bundles into one file
+		      --packages <file.json>  Reference scripts/assets from user-defined Unity packages instead of exporting them
 
 		Common options:
 		      --log <file>            Also write the log to a file
@@ -152,6 +154,9 @@ internal sealed class CliOptions
 						throw new CliUsageException($"Invalid thread count '{threads}'.");
 					}
 					options.Threads = threadCount;
+					break;
+				case "--packages":
+					options.PackagesFile = NextValue(arg);
 					break;
 				case "--dedupe":
 					options.Deduplicate = true;

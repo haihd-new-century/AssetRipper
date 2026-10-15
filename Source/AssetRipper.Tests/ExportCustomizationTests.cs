@@ -147,6 +147,48 @@ public class ExportCustomizationTests
 		Assert.That(fileSystem.Directory.GetFiles("/output/ExportedProject/Assets/Mesh", "*.asset", SearchOption.TopDirectoryOnly), Has.Length.EqualTo(2));
 	}
 
+	[Test]
+	public void PackageAssetsAreReferencedInsteadOfExported()
+	{
+		ProcessedAssetCollection collection = AssetCreator.CreateCollection(UnityVersion.V_2022);
+		IMesh mesh = collection.CreateMesh();
+		mesh.Name = "FromPackage";
+		PackageMappings mappings = PackageMappings.Parse($$"""
+			{ "Packages": [ { "Name": "com.example.models", "Version": "1.2.3",
+			  "Assets": { "{{collection.Name}}/{{mesh.PathID}}": "0123456789abcdef0123456789abcdef:4300000" } } ] }
+			""");
+
+		VirtualFileSystem fileSystem = Export(collection, s => s.Configuration.PackageMappings = mappings);
+
+		using (Assert.EnterMultipleScope())
+		{
+			Assert.That(fileSystem.File.Exists("/output/ExportedProject/Assets/Mesh/FromPackage.asset"), Is.False);
+			Assert.That(fileSystem.File.ReadAllText("/output/ExportedProject/Packages/manifest.json"), Does.Contain("\"com.example.models\": \"1.2.3\""));
+		}
+	}
+
+	[TestCase("0123456789abcdef0123456789abcdef:4300000", true, 4300000L)]
+	[TestCase("0123456789abcdef0123456789abcdef", true, 11400000L)]
+	[TestCase("not-a-guid:5", false, 0L)]
+	[TestCase("00000000000000000000000000000000", false, 0L)]
+	public void PackageReferencesAreParsed(string text, bool valid, long expectedFileId)
+	{
+		bool ok = PackageMappings.TryParseReference(text, out _, out long fileId);
+		Assert.That(ok, Is.EqualTo(valid));
+		if (valid)
+		{
+			Assert.That(fileId, Is.EqualTo(expectedFileId));
+		}
+	}
+
+	[Test]
+	public void PackageIsFoundByAssembly()
+	{
+		PackageMappings mappings = new() { Packages = [new() { Name = "com.unity.textmeshpro", Assemblies = ["Unity.TextMeshPro"] }] };
+		Assert.That(mappings.FindByAssembly("Unity.TextMeshPro")?.Name, Is.EqualTo("com.unity.textmeshpro"));
+		Assert.That(mappings.FindByAssembly("Assembly-CSharp"), Is.Null);
+	}
+
 	[TestCase("Assets/A.png", "Assets/A.png")]
 	[TestCase("Assets\\Sub\\A.png", "Assets/Sub/A.png")]
 	[TestCase("/etc/passwd", null)]

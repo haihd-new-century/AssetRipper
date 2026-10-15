@@ -1,5 +1,6 @@
 ﻿using AssetRipper.Assets;
 using AssetRipper.Assets.Bundles;
+using AssetRipper.Export.Configuration;
 using AssetRipper.Import.Configuration;
 using AssetRipper.Import.Logging;
 using AssetRipper.SourceGenerated;
@@ -34,6 +35,11 @@ public sealed partial class ProjectExporter
 	/// Merge identical assets duplicated across bundles into one exported file (see <see cref="AssetDeduplication"/>).
 	/// </summary>
 	public bool DeduplicateAssets { get; set; }
+
+	/// <summary>
+	/// Assets provided by user-defined packages are referenced by the package's GUIDs instead of being exported.
+	/// </summary>
+	public PackageMappings? PackageMappings { get; set; }
 
 	/// <summary>
 	/// Upper bound for raw input data held in memory by one preparation window.
@@ -104,6 +110,10 @@ public sealed partial class ProjectExporter
 		{
 			AssetDeduplication.Deduplicate(collections);
 		}
+		if (PackageMappings is { IsEmpty: false })
+		{
+			RedirectPackageAssets(collections, PackageMappings);
+		}
 		EventExportPreparationFinished?.Invoke();
 
 		EventExportStarted?.Invoke();
@@ -171,6 +181,56 @@ public sealed partial class ProjectExporter
 			window[0].Prepare();
 		}
 		return Math.Max(end, start + 1);
+	}
+
+	/// <summary>
+	/// Replaces collections whose assets are all provided by user-defined packages with redirections to the package GUIDs.
+	/// </summary>
+	internal static int RedirectPackageAssets(List<IExportCollection> collections, PackageMappings mappings)
+	{
+		int redirected = 0;
+		for (int i = 0; i < collections.Count; i++)
+		{
+			IExportCollection collection = collections[i];
+			if (!collection.Exportable)
+			{
+				continue;
+			}
+			List<(IUnityObjectBase Asset, UnityGuid Guid, long FileID)> targets = [];
+			bool allMapped = true;
+			foreach (IUnityObjectBase asset in collection.Assets)
+			{
+				if (mappings.TryGetAsset(asset.Collection.Name, asset.PathID, out UnityGuid guid, out long fileID))
+				{
+					targets.Add((asset, guid, fileID));
+				}
+				else if (asset is not AssetRipper.Processing.Textures.SpriteInformationObject)
+				{
+					allMapped = false;
+					break;
+				}
+			}
+			if (!allMapped || targets.Count == 0)
+			{
+				continue;
+			}
+			RedirectExportCollection redirect = new();
+			foreach ((IUnityObjectBase asset, UnityGuid guid, long fileID) in targets)
+			{
+				redirect.Add(asset, fileID, guid, AssetType.Serialized);
+			}
+			foreach (IUnityObjectBase asset in collection.Assets.Except(targets.Select(t => t.Asset)))
+			{
+				redirect.AddMissing(asset, AssetType.Serialized);
+			}
+			collections[i] = redirect;
+			redirected++;
+		}
+		if (redirected > 0)
+		{
+			Logger.Info(LogCategory.Export, $"User-defined packages: {redirected} asset collection(s) are referenced from packages instead of exported.");
+		}
+		return redirected;
 	}
 
 	private bool PassesFilter(IExportCollection collection)

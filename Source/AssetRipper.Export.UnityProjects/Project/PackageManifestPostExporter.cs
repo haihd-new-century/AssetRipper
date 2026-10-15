@@ -11,7 +11,15 @@ public class PackageManifestPostExporter : IPostExporter
 		fileSystem.Directory.Create(packagesDirectory);
 		string path = fileSystem.Path.Join(packagesDirectory, "manifest.json");
 		using Stream stream = fileSystem.File.Create(path);
-		CreateManifest(settings.Version).Save(stream);
+		PackageManifest manifest = CreateManifest(settings.Version);
+		foreach (PackageDefinition package in settings.PackageMappings.Packages)
+		{
+			if (!string.IsNullOrWhiteSpace(package.Name) && !string.IsNullOrWhiteSpace(package.Version))
+			{
+				manifest.Dependencies[package.Name] = package.Version;
+			}
+		}
+		manifest.Save(stream);
 	}
 
 	protected virtual PackageManifest CreateManifest(UnityVersion version)

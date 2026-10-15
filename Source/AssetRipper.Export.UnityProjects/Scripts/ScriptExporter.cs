@@ -19,11 +19,13 @@ public class ScriptExporter : IAssetExporter
 			FullyQualifiedTypeNames = configuration.ExportSettings.ScriptTypesFullyQualified,
 		};
 		ExportMode = configuration.ExportSettings.ScriptExportMode;
+		PackageMappings = configuration.PackageMappings;
 		ReferenceAssemblyDictionary = ReferenceAssemblies.GetReferenceAssemblies(AssemblyManager, configuration.Version);
 	}
 
 	public IAssemblyManager AssemblyManager { get; }
 	public ScriptExportMode ExportMode { get; }
+	public PackageMappings PackageMappings { get; }
 	internal ScriptDecompiler Decompiler { get; }
 	internal Dictionary<string, UnityGuid> ReferenceAssemblyDictionary { get; }
 	private bool HasDecompiled { get; set; } = false;
@@ -65,6 +67,10 @@ public class ScriptExporter : IAssetExporter
 
 	public MetaPtr CreateExportPointer(IMonoScript script)
 	{
+		if (PackageMappings.FindByAssembly(script.GetAssemblyNameFixed()) is { } package)
+		{
+			return CreatePackageScriptPointer(script, package);
+		}
 		return GetExportType(script) switch
 		{
 			AssemblyExportType.Decompile => new(MonoScriptDecompiledFileID, ScriptHashing.CalculateScriptGuid(script), AssetType.Meta),
@@ -73,8 +79,35 @@ public class ScriptExporter : IAssetExporter
 		};
 	}
 
+	/// <summary>
+	/// A reference to a script provided by a user-defined package.
+	/// </summary>
+	/// <remarks>
+	/// Source packages: the script's own GUID with the standard MonoScript file ID.
+	/// Precompiled packages: the DLL's GUID with the script's hashed file ID, like engine assemblies.
+	/// </remarks>
+	internal static MetaPtr CreatePackageScriptPointer(IMonoScript script, PackageDefinition package)
+	{
+		string fullName = string.IsNullOrEmpty(script.Namespace.String) ? script.ClassName_R.String : $"{script.Namespace}.{script.ClassName_R}";
+		if (package.Scripts.TryGetValue(fullName, out string? scriptGuid) && PackageMappings.TryParseGuid(scriptGuid, out UnityGuid guid))
+		{
+			return new(MonoScriptDecompiledFileID, guid, AssetType.Meta);
+		}
+		if (PackageMappings.TryParseGuid(package.AssemblyGuid, out UnityGuid assemblyGuid))
+		{
+			return new(ScriptHashing.CalculateScriptFileID(script), assemblyGuid, AssetType.Meta);
+		}
+		AssetRipper.Import.Logging.Logger.Warning(AssetRipper.Import.Logging.LogCategory.Export,
+			$"Package '{package.Name}' has no GUID for script '{fullName}'; the reference will be missing until the mapping is completed.");
+		return new(MonoScriptDecompiledFileID, ScriptHashing.CalculateScriptGuid(script), AssetType.Meta);
+	}
+
 	public AssemblyExportType GetExportType(string assemblyName)
 	{
+		if (PackageMappings.FindByAssembly(assemblyName) is not null)
+		{
+			return AssemblyExportType.Skip; // provided by a user-defined package
+		}
 		if (ReferenceAssemblyDictionary.ContainsKey(assemblyName))
 		{
 			return AssemblyExportType.Skip;

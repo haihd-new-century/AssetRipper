@@ -158,6 +158,10 @@ internal static class Program
 		filter.ExcludePaths.AddRange(options.ExcludePaths);
 		settings.ExportFilter = filter;
 
+		if (options.PackagesFile is not null)
+		{
+			settings.PackageMappings = PackageMappings.Load(options.PackagesFile);
+		}
 		if (options.PathOverridesFile is not null)
 		{
 			settings.AssetPathOverrides = AssetPathOverrides.Load(options.PathOverridesFile);

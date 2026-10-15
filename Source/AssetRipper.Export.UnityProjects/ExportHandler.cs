@@ -123,6 +123,7 @@ public class ExportHandler
 			MaxDegreeOfParallelism = Math.Max(1, MaxDegreeOfParallelism),
 			PreparationMemoryBudget = PreparationMemoryBudget,
 			DeduplicateAssets = Settings.ProcessingSettings.EnableAssetDeduplication,
+			PackageMappings = Settings.PackageMappings,
 		};
 		if (!Settings.ExportFilter.IsEmpty)
 		{
