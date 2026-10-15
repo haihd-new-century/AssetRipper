@@ -158,6 +158,15 @@ internal static class Program
 		filter.ExcludePaths.AddRange(options.ExcludePaths);
 		settings.ExportFilter = filter;
 
+		if (options.ShaderMode is not null)
+		{
+			settings.ExportSettings.ShaderExportMode = options.ShaderMode switch
+			{
+				"yaml" => ShaderExportMode.Yaml,
+				"decompile" => ShaderExportMode.Decompile,
+				_ => ShaderExportMode.Dummy,
+			};
+		}
 		if (options.PackagesFile is not null)
 		{
 			settings.PackageMappings = PackageMappings.Load(options.PackagesFile);

@@ -98,6 +98,8 @@ public sealed class DummyShaderTextExporter : ShaderExporterBase
 		return true;
 	}
 
+	internal static void WriteProperties(ISerializedProperties properties, TextWriter writer) => Export(properties, writer);
+
 	private static void Export(ISerializedProperties _this, TextWriter writer)
 	{
 		writer.WriteIndent(1);

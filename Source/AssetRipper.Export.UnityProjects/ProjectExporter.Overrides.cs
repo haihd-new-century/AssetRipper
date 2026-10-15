@@ -143,6 +143,7 @@ partial class ProjectExporter
 		OverrideExporter<IShader>(settings.ExportSettings.ShaderExportMode switch
 		{
 			ShaderExportMode.Yaml => new YamlShaderExporter(),
+			ShaderExportMode.Decompile => new GlslShaderExporter(),
 			_ => new DummyShaderTextExporter(),
 		});
 		OverrideExporter<IShader>(new SimpleShaderExporter());

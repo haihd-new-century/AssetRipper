@@ -30,4 +30,8 @@
 		<Content Remove="C:\Users\**\.nuget\packages\icsharpcode.decompiler\**\Pattern Matching.html" />
 	</ItemGroup>
 
+	<ItemGroup>
+		<InternalsVisibleTo Include="AssetRipper.Tests" />
+	</ItemGroup>
+
 </Project>
