@@ -1,5 +1,7 @@
 # Premium Features
 
+> In this fork (**AssetRipper Freemium**) all of the features below are available without a subscription. Shader decompilation restores GLSL programs (OpenGL/GLES builds); other graphics APIs fall back to dummy shaders. Il2Cpp analysis (Script Content Level 3) uses Cpp2IL's experimental IL recovery. Prefab outlining creates prefabs for repeated hierarchies without replacing the scene instances.
+
 AssetRipper has several premium features to make its export more similar to the original project, in order to reduce the difficulty for game developers to compare them.
 
 ## Static Mesh Separation

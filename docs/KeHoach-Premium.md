@@ -1,5 +1,7 @@
 # Kế hoạch hiện thực các tính năng Premium
 
+> **Trạng thái: HOÀN THÀNH.** Cả 7 tính năng đều đã có, edition đã đổi tên thành **AssetRipper Freemium**. Kết quả kiểm chứng xem [mục 5](#5-kết-quả-thực-hiện).
+
 Nguồn yêu cầu: `docs/Premium Edition.txt` (7 tính năng). Sau khi hoàn thành, đổi tên phiên bản từ **Free** thành **Freemium**.
 
 ## 1. Hiện trạng (trước kế hoạch)
@@ -83,3 +85,19 @@ Nguồn yêu cầu: `docs/Premium Edition.txt` (7 tính năng). Sau khi hoàn th
 - ISIL → IL của Cpp2IL còn thử nghiệm; tỉ lệ phục hồi thấp (Premium công bố 10–20% trên x86, ARM còn thấp hơn). Method nào phục hồi lỗi phải rơi về stub.
 - Shader: chỉ GLSL được dịch ngược thật; DX/Metal/SPIR-V cần trình dịch ngược riêng (ngoài phạm vi).
 - Prefab Outlining giai đoạn 1 không liên kết instance trong scene với prefab.
+
+## 5. Kết quả thực hiện
+
+| # | Tính năng | Commit | Bằng chứng |
+|---|---|---|---|
+| 1 | Shader Decompilation (GLSL) | `bc9635752` | Shader tuỳ chỉnh từ bản build GLES3 6000.3.26 → `.shader` có `GLSLPROGRAM`; Unity import lại không lỗi (1 pass, 3 property); 8 unit test |
+| 2 | Static Mesh Separation | `b792bb67c` | 9 renderer → 3 mesh, bounds local đúng |
+| 3 | Prefab Outlining | `fa6ee1c1e` | `static.apk` → 3 prefab; Unity load được kèm mesh và material, 0 lỗi compile; 8 unit test |
+| 4 | Il2Cpp Analysis (Level 3) | `e4a15dedb` | Log: *1 of 5 game methods recovered (20.0%)* trên ARM64, các method lỗi giữ stub compile được; 9 unit test |
+| 5 | Asset Path Overrides | `9665a76d9` | Test export ra `Assets/Models/Renamed.asset` |
+| 6 | User-Defined Package Export | `36e8dfcf8` | DLL và script của package không bị xuất; scene trỏ tới GUID script của package; manifest có package |
+| 7 | Asset Deduplication | `c6beb7724` | 2 bundle cùng mesh → 1 file |
+| – | Đổi Free → Freemium | `4730e0469` | Tiêu đề và brand hiển thị "AssetRipper Freemium"; Settings không còn mục nào bị khoá |
+| – | Explorer 2 khung cho GameBundle | `9a0e76830` | Chrome thật: 60 nút cây, 58 ô, 630 asset trong collection, xem trước 384×384, 0 lỗi JS |
+
+Toàn bộ test: **642/642** đạt.

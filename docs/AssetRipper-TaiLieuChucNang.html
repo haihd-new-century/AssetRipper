@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="dark light">
-<title>AssetRipper — Tài liệu chức năng</title>
+<title>AssetRipper Freemium — Tài liệu chức năng</title>
 <style>
 :root{--bg:#0f1218;--surface:#171b23;--surface2:#1e2430;--border:#2a3140;--text:#e6e9ef;--muted:#8b95a7;--accent:#4f8cff;--accent2:#7c5cff;--ok:#22c55e;--warn:#f59e0b;--bad:#ef4444;--radius:12px;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
 @media (prefers-color-scheme:light){:root{--bg:#f6f7fb;--surface:#fff;--surface2:#eef1f7;--border:#d9dee8;--text:#1b2230;--muted:#5d6878}}
@@ -80,7 +80,7 @@ footer{margin-top:60px;color:var(--muted);font-size:13px;border-top:1px solid va
 		<li class="sub"><a href="#f10">#10 Giảm RAM</a></li>
 		<li class="sub"><a href="#f11">#11 Export song song</a></li>
 		<li class="sub"><a href="#f12">#12 Export chọn lọc</a></li>
-		<li><a href="#premium">7. Tính năng Premium</a></li>
+		<li><a href="#premium">7. Tính năng Premium (Freemium)</a></li>
 		<li><a href="#cau-hinh">8. Cấu hình &amp; định dạng file</a></li>
 		<li><a href="#api">9. HTTP API</a></li>
 		<li><a href="#mo-rong">10. Điểm mở rộng cho dev</a></li>
@@ -93,12 +93,13 @@ footer{margin-top:60px;color:var(--muted);font-size:13px;border-top:1px solid va
 <main id="content">
 
 <section id="tong-quan" class="hero">
-	<h1>AssetRipper — Tài liệu chức năng</h1>
+	<h1>AssetRipper Freemium — Tài liệu chức năng</h1>
 	<p class="muted">AssetRipper đọc dữ liệu game Unity (3.5 → 6000.x) rồi xuất thành project Unity hoàn chỉnh hoặc nội dung thô (PNG, WAV, GLB, JSON…). Tài liệu này mô tả toàn bộ chức năng của bản fork trên nhánh <code>feat/system-improvements</code>, bao gồm các nâng cấp #2–#12, những tính năng tương đương Premium đã làm được, CLI mới và giao diện web mới.</p>
 	<div class="chips">
 		<span class="chip"><b>Nền tảng</b>.NET 10 · C# · Native AOT</span>
 		<span class="chip"><b>Giấy phép</b>GPL-3.0</span>
-		<span class="chip"><b>Kiểm thử</b>611/611 đạt</span>
+		<span class="chip"><b>Edition</b>AssetRipper Freemium</span>
+		<span class="chip"><b>Kiểm thử</b>642/642 đạt</span>
 		<span class="chip"><b>Thay đổi</b>60 file · +4.712 / −318 dòng</span>
 		<span class="chip"><b>Cập nhật</b>15/10/2026</span>
 	</div>
@@ -106,7 +107,7 @@ footer{margin-top:60px;color:var(--muted);font-size:13px;border-top:1px solid va
 
 <div class="grid">
 	<div class="card"><div class="stat">11</div><div class="muted">nâng cấp (#2–#12) đã hoàn thành và có kiểm chứng</div></div>
-	<div class="card"><div class="stat">3 + 1</div><div class="muted">tính năng Premium được hiện thực, cộng thêm khôi phục giá trị khởi tạo IL2CPP</div></div>
+	<div class="card"><div class="stat">7 / 7</div><div class="muted">tính năng Premium có trong bản Freemium (shader GLSL, mesh tĩnh, prefab, Il2Cpp Level 3, path override, package, khử trùng lặp)</div></div>
 	<div class="card"><div class="stat">−48%</div><div class="muted">RAM đỉnh của CLI (1.450 → 750 MB với <code>--low-memory</code>)</div></div>
 	<div class="card"><div class="stat">−27%</div><div class="muted">thời gian export khi bật xử lý texture song song (5,3 → 3,9 giây)</div></div>
 </div>
@@ -163,6 +164,7 @@ dotnet build Source/AssetRipper.CLI -c Release</code></pre>
 <p>Chạy <code>AssetRipper.GUI.Free</code>, hoặc <code>--headless --port 8080</code> để không tự mở trình duyệt. Giao diện mới dùng theme tối với thanh điều hướng cố định ở đầu trang.</p>
 <div class="grid">
 	<div class="card"><h4>🏠 Trang chủ / Dashboard</h4><p class="muted">Khi chưa nạp game: hiện nút mở thư mục hoặc file. Khi đã nạp: hiện nền tảng, scripting backend, phiên bản Unity, số asset, collection, loại asset, số asset không đọc được, và biểu đồ phân bố theo nhóm asset. Có nút đi tới trình duyệt asset và nút export.</p></div>
+	<div class="card"><h4>🧭 Explorer (trang GameBundle)</h4><p class="muted">Giao diện 2 khung giống File Explorer. Khung trái là cây thư mục: bundle, bundle con, collection kèm số asset, resource và file lỗi; có ô lọc cây. Khung phải gồm breadcrumb, các ô thư mục khi chọn bundle, hoặc danh sách asset khi chọn collection (dạng Icons hoặc Details, có lọc tên/class, phân trang 300 mục, thumbnail tải lười), cùng panel xem trước bên phải. Bấm một lần để xem trước, bấm đúp hoặc Enter để mở trang asset, dùng phím mũi tên để di chuyển. Trạng thái nằm trên URL hash nên Back/Forward và Reload đều hoạt động. Kiểm chứng bằng Chrome: 60 nút cây, 630 asset, ảnh xem trước 384×384, 0 lỗi JS.</p></div>
 	<div class="card"><h4>🗂️ Trình duyệt collection</h4><p class="muted">Lưới thẻ có thumbnail cho texture, sprite và terrain. Mỗi nhóm asset có màu riêng và một dòng thông tin, ví dụ <em>1024×1024 · ASTC_6x6</em> hay <em>824 vertices · 1 submesh</em>. Có thể lọc tức thì theo tên, class hoặc path ID (phím <kbd>/</kbd> để focus ô lọc), chuyển giữa dạng Lưới và Bảng (lựa chọn được ghi nhớ), và trang hiện 240 mục mỗi lần.</p></div>
 	<div class="card"><h4>🔎 Trang asset</h4><p class="muted">Phần đầu trang có ảnh xem trước 256 px (bấm để mở ảnh gốc) và các thông tin collection, path ID, chi tiết, đường dẫn gốc. Bên dưới là các tab có sẵn: Information, Image, Audio, Model, Text, YAML, JSON, Hex, Dependencies.</p></div>
 	<div class="card"><h4>⚙️ Cài đặt &amp; Configuration Files</h4><p class="muted">Các ô <em>Static Mesh Separation</em> và <em>Asset Deduplication</em> đã được mở khoá. Trang Configuration Files có thêm hai singleton mới là <code>ExportFilter</code> và <code>AssetPathOverrides</code>, chỉnh trực tiếp dưới dạng JSON.</p></div>
@@ -193,6 +195,9 @@ AssetRipper.CLI --help</code></pre>
 	<tr><td><code>--include-path / --exclude-path &lt;glob&gt;</code></td><td>Lọc theo đường dẫn; có thể lặp lại</td></tr>
 	<tr><td><code>--path-overrides &lt;file&gt;</code></td><td>Đổi đường dẫn xuất của từng asset (Premium)</td></tr>
 	<tr><td><code>--dedupe</code></td><td>Khử trùng lặp asset giữa các bundle (Premium)</td></tr>
+	<tr><td><code>--outline-prefabs</code></td><td>Tạo prefab cho các hierarchy lặp lại trong scene (Premium)</td></tr>
+	<tr><td><code>--shaders dummy|yaml|decompile</code></td><td>Chế độ xuất shader; <code>decompile</code> khôi phục GLSL (Premium)</td></tr>
+	<tr><td><code>--packages &lt;file&gt;</code></td><td>User-Defined Package Export (Premium)</td></tr>
 	<tr><td><code>-j, --threads &lt;n&gt;</code></td><td>Số luồng xử lý texture (1 = tuần tự)</td></tr>
 	<tr><td><code>--low-memory</code></td><td>Giới hạn giải nén trong RAM ở 4 MB và xử lý tuần tự</td></tr>
 	<tr><td><code>--log &lt;file&gt;</code>, <code>-q</code>, <code>--json</code></td><td>Ghi log ra file / chỉ in cảnh báo và lỗi / in JSON (với <code>info</code>)</td></tr>
@@ -282,18 +287,19 @@ Import : Il2Cpp initialization succeeded with '…/lib/armeabi-v7a/libil2cpp.so'
 </section>
 
 <section id="premium">
-<h2>7. Tính năng Premium</h2>
-<p>Bảng dưới đối chiếu danh sách trong <code>docs/articles/PremiumFeatures.md</code> với phần đã hiện thực ở bản fork này. GPL-3.0 cho phép tự hiện thực các tính năng này; mã Premium gốc không được dùng.</p>
+<h2>7. Tính năng Premium (có sẵn trong Freemium)</h2>
+<p>Danh sách lấy từ <code>docs/Premium Edition.txt</code>. Kế hoạch và kết quả chi tiết nằm trong <code>docs/KeHoach-Premium.md</code>. GPL-3.0 cho phép tự hiện thực các tính năng này; mã Premium gốc không được dùng.</p>
 <table>
-	<tr><th>Tính năng</th><th>Trạng thái</th><th>Mô tả / bằng chứng</th></tr>
-	<tr><td>Asset Path Overrides</td><td><span class="badge ok">Đã làm</span></td><td>File JSON <code>Files → collection → pathID → đường dẫn</code>, đường dẫn được kiểm tra an toàn (từ chối đường dẫn tuyệt đối và <code>..</code>). Có test export thật: <code>Assets/Models/Renamed.asset</code>.</td></tr>
-	<tr><td>Asset Deduplication</td><td><span class="badge ok">Đã làm</span></td><td>Áp dụng cho TextAsset, AudioClip, Mesh, Shader và Texture không có sprite. So sánh bằng <code>AssetEqualityComparer</code>; bản trùng được trỏ về bản gốc qua <code>AliasExportCollection</code>. Test: 2 bundle cùng một mesh → 1 file; nội dung khác nhau → 2 file.</td></tr>
-	<tr><td>Static Mesh Separation</td><td><span class="badge ok">Đã làm</span></td><td>Tách phần submesh của từng renderer khỏi “Combined Mesh”, đưa về không gian local (vị trí, normal, tangent, xử lý cả transform bị lật), gộp các hình học giống nhau, và tái sử dụng mesh gốc nếu có. Trên build 6000.3.26: 9 renderer → 3 mesh; bounds đúng kích thước gốc (cube ±0,5; cylinder 0,5×1×0,5); StaticBatchInfo được xoá còn cờ static vẫn giữ.</td></tr>
-	<tr><td>Traditional IL2CPP Analysis</td><td><span class="badge warn">Một phần</span></td><td>Chưa dựng lại được thân method từ mã máy. Đã có bước đầu: khôi phục giá trị khởi tạo field (#8), hook <code>RecoveryProcessingLayers</code> và hook tiền xử lý (#7).</td></tr>
-	<tr><td>Prefab Outlining</td><td><span class="badge bad">Chưa làm</span></td><td>Cần nhận diện các cây GameObject lặp lại và sinh PrefabInstance kèm modification. Đây là việc lớn, nằm ngoài phạm vi đợt này.</td></tr>
-	<tr><td>Shader Decompilation</td><td><span class="badge bad">Chưa làm</span></td><td>Cần trình dịch ngược DXBC/SPIR-V/Metal sang HLSL. Đây là một dự án riêng.</td></tr>
-	<tr><td>User Defined Package Export</td><td><span class="badge bad">Chưa làm</span></td><td>Cần dữ liệu khai thác (mining) package do người dùng cung cấp. Đã có sẵn hạ tầng singleton để lưu dữ liệu này.</td></tr>
+	<tr><th>Tính năng</th><th>Trạng thái</th><th>Cách bật / bằng chứng</th></tr>
+	<tr><td>Shader Decompilation</td><td><span class="badge ok">Có (GLSL)</span></td><td>Settings → Shader Export: <em>Decompile</em>, hoặc <code>--shaders decompile</code>. <code>ShaderBlobReader</code> giải nén blob LZ4 theo platform; <code>GlslShaderExporter</code> dựng lại ShaderLab (Properties, Tags, LOD, Cull/ZWrite/ZTest/Blend/ColorMask kèm tham chiếu <code>[_Prop]</code>) cùng <code>GLSLPROGRAM</code> cho từng pass. Kết quả: shader tuỳ chỉnh từ bản build GLES3 được Unity 6000.3.26 import lại không lỗi (1 pass, 3 property). Build chỉ có DirectX/Metal/Vulkan thì dùng shader dummy.</td></tr>
+	<tr><td>Static Mesh Separation</td><td><span class="badge ok">Có</span></td><td>Mặc định bật. 9 renderer → 3 mesh, bounds đúng kích thước gốc.</td></tr>
+	<tr><td>Prefab Outlining</td><td><span class="badge ok">Có</span></td><td>Settings → <em>Enable Prefab Outlining</em>, hoặc <code>--outline-prefabs</code>. Nhóm hierarchy theo chữ ký cấu trúc rồi clone thành prefab trong <code>Assets/Prefabs/Outlined</code>. Kết quả: 3 prefab load được trong Unity, kèm mesh và material, 0 lỗi. Instance trong scene không được thay bằng PrefabInstance.</td></tr>
+	<tr><td>Il2Cpp Analysis</td><td><span class="badge ok">Có (thử nghiệm)</span></td><td>Script Content Level 3. <code>SafeIlRecoveryOutputFormat</code> dùng chức năng dịch ISIL → IL của Cpp2IL, bỏ qua engine/BCL, và giữ stub compile được cho method dịch lỗi. Kết quả trên ARM64: phục hồi 1/5 method game (20%). Giá trị khởi tạo field vẫn được khôi phục ở Level 3.</td></tr>
+	<tr><td>Asset Path Overrides</td><td><span class="badge ok">Có</span></td><td>Configuration Files → <code>AssetPathOverrides</code>, hoặc <code>--path-overrides</code>.</td></tr>
+	<tr><td>User-Defined Package Export</td><td><span class="badge ok">Có</span></td><td>Configuration Files → <code>PackageMappings</code>, hoặc <code>--packages</code>. Assembly của package bị bỏ qua; script trỏ tới GUID của package (source: GUID của file <code>.cs</code>, precompiled: GUID của DLL); asset được ánh xạ qua <code>guid:fileID</code>; package được thêm vào <code>manifest.json</code>. Kết quả: DLL và script của package không bị xuất, scene trỏ đúng GUID.</td></tr>
+	<tr><td>Asset Deduplication</td><td><span class="badge ok">Có</span></td><td>Settings → <em>Enable Asset Deduplication</em>, hoặc <code>--dedupe</code>.</td></tr>
 </table>
+<div class="note">Edition được đổi tên từ “AssetRipper Free” thành <b>“AssetRipper Freemium”</b> (17 ngôn ngữ). Tên project và assembly (<code>AssetRipper.GUI.Free</code>) giữ nguyên để không phá vỡ build và CI.</div>
 </section>
 
 <section id="cau-hinh">
@@ -353,7 +359,7 @@ Import : Il2Cpp initialization succeeded with '…/lib/armeabi-v7a/libil2cpp.so'
 <section id="ra-soat">
 <h2>11. Rà soát &amp; kiểm thử</h2>
 <div class="grid">
-	<div class="card"><h4>Unit test</h4><div class="stat">611 / 611</div><p class="muted">8 project test. Trong đó AssetRipper.Tests có 242 test (trước đây 173) và GUI.Web.Tests có 18 test (trước đây 6); 82 test mới thuộc ImportRobustness, CliOptions, ExportCustomization, FieldInitializerRecovery, StaticMeshSeparation, VirtualFileSystem và LocalOriginMiddleware.</p></div>
+	<div class="card"><h4>Unit test</h4><div class="stat">642 / 642</div><p class="muted">8 project test. Trong đó AssetRipper.Tests có 273 test (trước đây 173) và GUI.Web.Tests có 18 test (trước đây 6); 113 test mới, gồm các nhóm ImportRobustness, CliOptions, ExportCustomization, FieldInitializerRecovery, StaticMeshSeparation, IlRecovery, ShaderDecompilation, PrefabOutlining, VirtualFileSystem và LocalOriginMiddleware.</p></div>
 	<div class="card"><h4>Build</h4><div class="stat">AOT ✓</div><p class="muted">Release Native AOT osx-arm64 build thành công, không phát sinh cảnh báo trim/AOT mới từ code thêm vào.</p></div>
 	<div class="card"><h4>End-to-end</h4><div class="stat">3 APK</div><p class="muted"><code>ripper.apk</code>, <code>rich.apk</code>, <code>static.apk</code> (Unity 6000.3.26f1, IL2CPP arm64): 0 lỗi, chỉ 2 cảnh báo dự kiến.</p></div>
 </div>
@@ -368,7 +374,7 @@ Import : Il2Cpp initialization succeeded with '…/lib/armeabi-v7a/libil2cpp.so'
 	<li>Trên macOS, <code>PeakWorkingSet64</code> luôn trả 0; CLI chuyển sang hiển thị working set hiện tại cùng đỉnh managed heap.</li>
 </ul>
 <h3>Cách tái kiểm tra</h3>
-<pre><code>dotnet test AssetRipper.slnx                         # 611 test
+<pre><code>dotnet test AssetRipper.slnx                         # 642 test
 DOTNET=$HOME/.dotnet/dotnet ./build.sh                # Native AOT
 dotnet Source/0Bins/AssetRipper.CLI/Debug/AssetRipper.CLI.dll export game.apk -o out -f --log out.log</code></pre>
 </section>
@@ -377,7 +383,9 @@ dotnet Source/0Bins/AssetRipper.CLI/Debug/AssetRipper.CLI.dll export game.apk -o
 <h2>12. Hạn chế đã biết</h2>
 <ul>
 	<li><b>TPK chưa có Unity 6000.3.21–6000.3.26:</b> PlayerSettings chỉ đọc được 90/176 field. Cách sửa gốc là bổ sung dump type tree vào <code>AssetRipper/Tpk</code> rồi chạy <code>generate.sh</code>.</li>
-	<li><b>Thân method IL2CPP:</b> vẫn rỗng ở bản Free; chỉ có field và giá trị khởi tạo.</li>
+	<li><b>Thân method IL2CPP:</b> Level 3 chỉ phục hồi được một phần (20% trên bản build ARM64 dùng để thử); các method còn lại là stub.</li>
+	<li><b>Shader:</b> chỉ chương trình GLSL được dịch ngược; DXBC, Metal và SPIR-V dùng shader dummy.</li>
+	<li><b>Prefab Outlining:</b> instance trong scene chưa được liên kết với prefab.</li>
 	<li><b>Export không tất định:</b> GUID của scene/DLL và MVID thay đổi giữa các lần chạy. Hạn chế này có từ trước, không do thay đổi song song gây ra.</li>
 	<li><b><code>-ld_classic</code></b> đã bị Apple đánh dấu deprecated; nếu Xcode gỡ hẳn thì dùng <code>--no-aot</code>.</li>
 	<li><b>Web API không có xác thực:</b> CSRF và DNS rebinding đã được chặn (mục 9), nhưng các request GET (ví dụ <code>/Dialogs/*</code>, <code>/IO/*/Exists</code>) vẫn gọi được từ trang khác. Chúng không thay đổi dữ liệu. Không mở port ra mạng.</li>
@@ -401,7 +409,14 @@ dotnet Source/0Bins/AssetRipper.CLI/Debug/AssetRipper.CLI.dll export game.apk -o
 	<tr><td><code>b792bb67c</code></td><td>Static mesh separation (Premium)</td></tr>
 	<tr><td><code>d959d35d1</code></td><td>Sửa lỗi phát hiện khi rà soát: ảnh tải lười, bảng dựng phía client</td></tr>
 	<tr><td><code>306c476ef</code> · <code>4d8467396</code></td><td>Kiểm chứng nhánh thử lại IL2CPP; sửa lỗi vị trí đọc của VirtualFileSystem; test #4</td></tr>
-	<tr><td>(commit này)</td><td>Chống CSRF và DNS rebinding cho web server cục bộ (#1)</td></tr>
+	<tr><td><code>0fc0c743a</code></td><td>Chống CSRF và DNS rebinding cho web server cục bộ (#1)</td></tr>
+	<tr><td><code>9a0e76830</code></td><td>Explorer 2 khung cho trang GameBundle</td></tr>
+	<tr><td><code>bbd770158</code></td><td>Kế hoạch các tính năng Premium (<code>docs/KeHoach-Premium.md</code>)</td></tr>
+	<tr><td><code>e4a15dedb</code></td><td>Il2Cpp Analysis (Level 3)</td></tr>
+	<tr><td><code>36e8dfcf8</code></td><td>User-Defined Package Export</td></tr>
+	<tr><td><code>bc9635752</code></td><td>Shader Decompilation (GLSL)</td></tr>
+	<tr><td><code>fa6ee1c1e</code></td><td>Prefab Outlining</td></tr>
+	<tr><td><code>4730e0469</code></td><td>Đổi tên Free → Freemium, mở khoá các tuỳ chọn</td></tr>
 </table>
 </section>
 
