@@ -99,7 +99,7 @@ footer{margin-top:60px;color:var(--muted);font-size:13px;border-top:1px solid va
 		<span class="chip"><b>Nền tảng</b>.NET 10 · C# · Native AOT</span>
 		<span class="chip"><b>Giấy phép</b>GPL-3.0</span>
 		<span class="chip"><b>Edition</b>AssetRipper Freemium</span>
-		<span class="chip"><b>Kiểm thử</b>642/642 đạt</span>
+		<span class="chip"><b>Kiểm thử</b>644/644 đạt</span>
 		<span class="chip"><b>Thay đổi</b>60 file · +4.712 / −318 dòng</span>
 		<span class="chip"><b>Cập nhật</b>15/10/2026</span>
 	</div>
@@ -293,7 +293,7 @@ Import : Il2Cpp initialization succeeded with '…/lib/armeabi-v7a/libil2cpp.so'
 	<tr><th>Tính năng</th><th>Trạng thái</th><th>Cách bật / bằng chứng</th></tr>
 	<tr><td>Shader Decompilation</td><td><span class="badge ok">Có (GLSL)</span></td><td>Settings → Shader Export: <em>Decompile</em>, hoặc <code>--shaders decompile</code>. <code>ShaderBlobReader</code> giải nén blob LZ4 theo platform; <code>GlslShaderExporter</code> dựng lại ShaderLab (Properties, Tags, LOD, Cull/ZWrite/ZTest/Blend/ColorMask kèm tham chiếu <code>[_Prop]</code>) cùng <code>GLSLPROGRAM</code> cho từng pass. Kết quả: shader tuỳ chỉnh từ bản build GLES3 được Unity 6000.3.26 import lại không lỗi (1 pass, 3 property). Build chỉ có DirectX/Metal/Vulkan thì dùng shader dummy.</td></tr>
 	<tr><td>Static Mesh Separation</td><td><span class="badge ok">Có</span></td><td>Mặc định bật. 9 renderer → 3 mesh, bounds đúng kích thước gốc.</td></tr>
-	<tr><td>Prefab Outlining</td><td><span class="badge ok">Có</span></td><td>Settings → <em>Enable Prefab Outlining</em>, hoặc <code>--outline-prefabs</code>. Nhóm hierarchy theo chữ ký cấu trúc rồi clone thành prefab trong <code>Assets/Prefabs/Outlined</code>. Kết quả: 3 prefab load được trong Unity, kèm mesh và material, 0 lỗi. Instance trong scene không được thay bằng PrefabInstance.</td></tr>
+	<tr><td>Prefab Outlining</td><td><span class="badge ok">Có</span></td><td>Settings → <em>Enable Prefab Outlining</em>, hoặc <code>--outline-prefabs</code>. Nhóm hierarchy theo chữ ký cấu trúc rồi clone thành prefab trong <code>Assets/Prefabs/Outlined</code>. <code>PrefabInstanceLinkingProcessor</code> sau đó thay các instance trong scene bằng <code>PrefabInstance</code>: parent cùng modification vị trí/rotation/scale/tên được giữ, object bị tham chiếu từ ngoài được giữ ở dạng <em>stripped</em>, instance nào khác prefab thì để inline. Kết quả: 3 prefab, 9/9 instance được liên kết; Unity mở scene thấy 9 prefab instance, giữ đúng parent, vị trí, scale và mesh, 0 lỗi.</td></tr>
 	<tr><td>Il2Cpp Analysis</td><td><span class="badge ok">Có (thử nghiệm)</span></td><td>Script Content Level 3. <code>SafeIlRecoveryOutputFormat</code> dùng chức năng dịch ISIL → IL của Cpp2IL, bỏ qua engine/BCL, và giữ stub compile được cho method dịch lỗi. Kết quả trên ARM64: phục hồi 1/5 method game (20%). Giá trị khởi tạo field vẫn được khôi phục ở Level 3.</td></tr>
 	<tr><td>Asset Path Overrides</td><td><span class="badge ok">Có</span></td><td>Configuration Files → <code>AssetPathOverrides</code>, hoặc <code>--path-overrides</code>.</td></tr>
 	<tr><td>User-Defined Package Export</td><td><span class="badge ok">Có</span></td><td>Configuration Files → <code>PackageMappings</code>, hoặc <code>--packages</code>. Assembly của package bị bỏ qua; script trỏ tới GUID của package (source: GUID của file <code>.cs</code>, precompiled: GUID của DLL); asset được ánh xạ qua <code>guid:fileID</code>; package được thêm vào <code>manifest.json</code>. Kết quả: DLL và script của package không bị xuất, scene trỏ đúng GUID.</td></tr>
@@ -359,7 +359,7 @@ Import : Il2Cpp initialization succeeded with '…/lib/armeabi-v7a/libil2cpp.so'
 <section id="ra-soat">
 <h2>11. Rà soát &amp; kiểm thử</h2>
 <div class="grid">
-	<div class="card"><h4>Unit test</h4><div class="stat">642 / 642</div><p class="muted">8 project test. Trong đó AssetRipper.Tests có 273 test (trước đây 173) và GUI.Web.Tests có 18 test (trước đây 6); 113 test mới, gồm các nhóm ImportRobustness, CliOptions, ExportCustomization, FieldInitializerRecovery, StaticMeshSeparation, IlRecovery, ShaderDecompilation, PrefabOutlining, VirtualFileSystem và LocalOriginMiddleware.</p></div>
+	<div class="card"><h4>Unit test</h4><div class="stat">644 / 644</div><p class="muted">8 project test. Trong đó AssetRipper.Tests có 275 test (trước đây 173) và GUI.Web.Tests có 18 test (trước đây 6); 115 test mới, gồm các nhóm ImportRobustness, CliOptions, ExportCustomization, FieldInitializerRecovery, StaticMeshSeparation, IlRecovery, ShaderDecompilation, PrefabOutlining, VirtualFileSystem và LocalOriginMiddleware.</p></div>
 	<div class="card"><h4>Build</h4><div class="stat">AOT ✓</div><p class="muted">Release Native AOT osx-arm64 build thành công, không phát sinh cảnh báo trim/AOT mới từ code thêm vào.</p></div>
 	<div class="card"><h4>End-to-end</h4><div class="stat">3 APK</div><p class="muted"><code>ripper.apk</code>, <code>rich.apk</code>, <code>static.apk</code> (Unity 6000.3.26f1, IL2CPP arm64): 0 lỗi, chỉ 2 cảnh báo dự kiến.</p></div>
 </div>
@@ -374,7 +374,7 @@ Import : Il2Cpp initialization succeeded with '…/lib/armeabi-v7a/libil2cpp.so'
 	<li>Trên macOS, <code>PeakWorkingSet64</code> luôn trả 0; CLI chuyển sang hiển thị working set hiện tại cùng đỉnh managed heap.</li>
 </ul>
 <h3>Cách tái kiểm tra</h3>
-<pre><code>dotnet test AssetRipper.slnx                         # 642 test
+<pre><code>dotnet test AssetRipper.slnx                         # 644 test
 DOTNET=$HOME/.dotnet/dotnet ./build.sh                # Native AOT
 dotnet Source/0Bins/AssetRipper.CLI/Debug/AssetRipper.CLI.dll export game.apk -o out -f --log out.log</code></pre>
 </section>
@@ -385,7 +385,7 @@ dotnet Source/0Bins/AssetRipper.CLI/Debug/AssetRipper.CLI.dll export game.apk -o
 	<li><b>TPK chưa có Unity 6000.3.21–6000.3.26:</b> PlayerSettings chỉ đọc được 90/176 field. Cách sửa gốc là bổ sung dump type tree vào <code>AssetRipper/Tpk</code> rồi chạy <code>generate.sh</code>.</li>
 	<li><b>Thân method IL2CPP:</b> Level 3 chỉ phục hồi được một phần (20% trên bản build ARM64 dùng để thử); các method còn lại là stub.</li>
 	<li><b>Shader:</b> chỉ chương trình GLSL được dịch ngược; DXBC, Metal và SPIR-V dùng shader dummy.</li>
-	<li><b>Prefab Outlining:</b> instance trong scene chưa được liên kết với prefab.</li>
+	<li><b>Prefab Outlining:</b> chỉ instance có nội dung giống hệt prefab (trừ transform và tên ở root) mới được liên kết; các instance khác giữ inline.</li>
 	<li><b>Export không tất định:</b> GUID của scene/DLL và MVID thay đổi giữa các lần chạy. Hạn chế này có từ trước, không do thay đổi song song gây ra.</li>
 	<li><b><code>-ld_classic</code></b> đã bị Apple đánh dấu deprecated; nếu Xcode gỡ hẳn thì dùng <code>--no-aot</code>.</li>
 	<li><b>Web API không có xác thực:</b> CSRF và DNS rebinding đã được chặn (mục 9), nhưng các request GET (ví dụ <code>/Dialogs/*</code>, <code>/IO/*/Exists</code>) vẫn gọi được từ trang khác. Chúng không thay đổi dữ liệu. Không mở port ra mạng.</li>
@@ -417,6 +417,8 @@ dotnet Source/0Bins/AssetRipper.CLI/Debug/AssetRipper.CLI.dll export game.apk -o
 	<tr><td><code>bc9635752</code></td><td>Shader Decompilation (GLSL)</td></tr>
 	<tr><td><code>fa6ee1c1e</code></td><td>Prefab Outlining</td></tr>
 	<tr><td><code>4730e0469</code></td><td>Đổi tên Free → Freemium, mở khoá các tuỳ chọn</td></tr>
+	<tr><td><code>e35afea7e</code></td><td>Tài liệu: kết quả kế hoạch Premium, Freemium</td></tr>
+	<tr><td>(commit này)</td><td>Prefab Outlining giai đoạn 2: liên kết instance trong scene với prefab</td></tr>
 </table>
 </section>
 

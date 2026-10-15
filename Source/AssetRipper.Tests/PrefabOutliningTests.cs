@@ -83,4 +83,40 @@ public class PrefabOutliningTests
 			Assert.That(root.GetTransform().Father_C4P, Is.SameAs(world.GetTransform()), "scene objects are untouched");
 		}
 	}
+
+	[Test]
+	public void IdenticalInstanceMatchesPrefabExceptRootTransform()
+	{
+		ProcessedAssetCollection scene = AssetCreator.CreateCollection(UnityVersion.V_2022);
+		IGameObject a = CreateObject(scene, "Lamp (1)");
+		CreateObject(scene, "Bulb", a.GetTransform());
+		IGameObject b = CreateObject(scene, "Lamp (2)");
+		CreateObject(scene, "Bulb", b.GetTransform());
+		b.GetTransform().LocalPosition_C4.X = 42; // root transform differences become modifications
+
+		Dictionary<AssetRipper.Assets.IUnityObjectBase, AssetRipper.Assets.IUnityObjectBase> map = new();
+		Assert.That(PrefabInstanceLinkingProcessor.TryMap(b, a, map), Is.True);
+		Assert.That(map, Has.Count.EqualTo(4), "2 GameObjects + 2 Transforms");
+		foreach ((var source, var target) in map)
+		{
+			bool isRoot = source == b || source == b.GetTransform();
+			Assert.That(PrefabInstanceLinkingProcessor.ContentEquals(source, target, map, isRoot), Is.True, source.ClassName);
+		}
+	}
+
+	[Test]
+	public void ChildDifferenceKeepsInstanceInline()
+	{
+		ProcessedAssetCollection scene = AssetCreator.CreateCollection(UnityVersion.V_2022);
+		IGameObject a = CreateObject(scene, "Lamp");
+		CreateObject(scene, "Bulb", a.GetTransform());
+		IGameObject b = CreateObject(scene, "Lamp");
+		IGameObject bulb = CreateObject(scene, "Bulb", b.GetTransform());
+		bulb.GetTransform().LocalPosition_C4.Y = 3; // a non-root difference cannot be expressed by root modifications
+
+		Dictionary<AssetRipper.Assets.IUnityObjectBase, AssetRipper.Assets.IUnityObjectBase> map = new();
+		Assert.That(PrefabInstanceLinkingProcessor.TryMap(b, a, map), Is.True);
+		var childTransform = bulb.GetTransform();
+		Assert.That(PrefabInstanceLinkingProcessor.ContentEquals(childTransform, map[childTransform], map, isRoot: false), Is.False);
+	}
 }

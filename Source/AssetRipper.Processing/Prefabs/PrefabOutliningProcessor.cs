@@ -35,6 +35,11 @@ public sealed partial class PrefabOutliningProcessor : IAssetProcessor
 
 	public int CreatedPrefabCount { get; private set; }
 
+	/// <summary>
+	/// The outlined prefabs: the cloned prefab root and the scene hierarchies it was created from (the first one is the clone's source).
+	/// </summary>
+	public List<(IGameObject PrefabRoot, List<IGameObject> SceneInstances)> Outlines { get; } = [];
+
 	public void Process(GameData gameData)
 	{
 		Logger.Info(LogCategory.Processing, "Prefab outlining");
@@ -93,6 +98,7 @@ public sealed partial class PrefabOutliningProcessor : IAssetProcessor
 				clone.Name = uniqueName;
 				clone.OverrideDirectory = OutputDirectory;
 				clone.OverrideName = uniqueName;
+				Outlines.Add((clone, instances));
 				CreatedPrefabCount++;
 				Logger.Verbose(LogCategory.Processing, $"Outlined prefab '{uniqueName}' from {instances.Count} scene instances");
 			}

@@ -59,7 +59,7 @@ Nguồn yêu cầu: `docs/Premium Edition.txt` (7 tính năng). Sau khi hoàn th
   1. Với mỗi GameObject gốc (root hoặc con trực tiếp) trong các scene, tính chữ ký cấu trúc gồm tên đã bỏ hậu tố `(1)`/`(Clone)`, danh sách component theo kiểu, và đệ quy cho các con.
   2. Nhóm theo chữ ký; nhóm nào có ≥ 2 instance (hoặc trùng tên một prefab sẵn có) là ứng viên.
   3. Tạo prefab asset (`PrefabHierarchyObject`, đặt trong collection mới “Outlined Prefabs”) bằng cách clone hierarchy của instance đầu tiên. Đặt `OverridePath = Assets/Prefabs/Outlined/<Name>.prefab`.
-  4. Giai đoạn 1 không thay instance trong scene bằng PrefabInstance (việc đó cần modification và stripped object, sẽ làm ở giai đoạn 2). Scene vẫn đúng, người dùng có thêm prefab để tái sử dụng.
+  4. Giai đoạn 2 (đã làm): `PrefabInstanceLinkingProcessor` thay mỗi instance có nội dung trùng khớp bằng một `PrefabInstance` (parent cùng các modification vị trí/rotation/scale/tên). Object bị tham chiếu từ ngoài được giữ ở dạng *stripped*; instance nào khác prefab ở ngoài root thì giữ nguyên inline.
 - Kích hoạt: `EnablePrefabOutlining` (đã có trong Settings).
 - Kiểm chứng: build một scene có 3 bản sao của cùng một hierarchy → xuất ra 1 prefab; có test chữ ký cấu trúc.
 
@@ -84,7 +84,7 @@ Nguồn yêu cầu: `docs/Premium Edition.txt` (7 tính năng). Sau khi hoàn th
 
 - ISIL → IL của Cpp2IL còn thử nghiệm; tỉ lệ phục hồi thấp (Premium công bố 10–20% trên x86, ARM còn thấp hơn). Method nào phục hồi lỗi phải rơi về stub.
 - Shader: chỉ GLSL được dịch ngược thật; DX/Metal/SPIR-V cần trình dịch ngược riêng (ngoài phạm vi).
-- Prefab Outlining giai đoạn 1 không liên kết instance trong scene với prefab.
+- Prefab Outlining: chỉ instance có nội dung giống hệt prefab (trừ transform và tên ở root) mới được liên kết; các instance khác giữ inline.
 
 ## 5. Kết quả thực hiện
 
@@ -92,7 +92,7 @@ Nguồn yêu cầu: `docs/Premium Edition.txt` (7 tính năng). Sau khi hoàn th
 |---|---|---|---|
 | 1 | Shader Decompilation (GLSL) | `bc9635752` | Shader tuỳ chỉnh từ bản build GLES3 6000.3.26 → `.shader` có `GLSLPROGRAM`; Unity import lại không lỗi (1 pass, 3 property); 8 unit test |
 | 2 | Static Mesh Separation | `b792bb67c` | 9 renderer → 3 mesh, bounds local đúng |
-| 3 | Prefab Outlining | `fa6ee1c1e` | `static.apk` → 3 prefab; Unity load được kèm mesh và material, 0 lỗi compile; 8 unit test |
+| 3 | Prefab Outlining (giai đoạn 1 + 2) | `fa6ee1c1e`, (commit này) | `static.apk` → 3 prefab; **9/9 instance trong scene được thay bằng PrefabInstance**. Unity mở scene thấy 9 prefab instance, giữ đúng parent, vị trí, scale và mesh; 0 lỗi; 10 unit test |
 | 4 | Il2Cpp Analysis (Level 3) | `e4a15dedb` | Log: *1 of 5 game methods recovered (20.0%)* trên ARM64, các method lỗi giữ stub compile được; 9 unit test |
 | 5 | Asset Path Overrides | `9665a76d9` | Test export ra `Assets/Models/Renamed.asset` |
 | 6 | User-Defined Package Export | `36e8dfcf8` | DLL và script của package không bị xuất; scene trỏ tới GUID script của package; manifest có package |
@@ -100,4 +100,4 @@ Nguồn yêu cầu: `docs/Premium Edition.txt` (7 tính năng). Sau khi hoàn th
 | – | Đổi Free → Freemium | `4730e0469` | Tiêu đề và brand hiển thị "AssetRipper Freemium"; Settings không còn mục nào bị khoá |
 | – | Explorer 2 khung cho GameBundle | `9a0e76830` | Chrome thật: 60 nút cây, 58 ô, 630 asset trong collection, xem trước 384×384, 0 lỗi JS |
 
-Toàn bộ test: **642/642** đạt.
+Toàn bộ test: **644/644** đạt.
