@@ -42,7 +42,8 @@ public sealed class FieldInitializerRecoveryProcessor(ScriptContentLevel scriptC
 	public void Process(GameData gameData)
 	{
 		IAssemblyManager manager = gameData.AssemblyManager;
-		if (manager.ScriptingBackend != ScriptingBackend.IL2Cpp || scriptContentLevel is ScriptContentLevel.Level0 or > ScriptContentLevel.Level2)
+		// Level 3 also benefits: constructors that could not be recovered remain trivial and are filled here.
+		if (manager.ScriptingBackend != ScriptingBackend.IL2Cpp || scriptContentLevel is ScriptContentLevel.Level0)
 		{
 			return;
 		}

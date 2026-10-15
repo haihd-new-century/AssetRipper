@@ -217,10 +217,16 @@ public sealed class IL2CppManager : BaseManager
 		}
 
 		AsmResolverDllOutputFormat outputFormat = contentLevel == ScriptContentLevel.Level3
-			? RecoveryOutputFormat ?? DefaultOutputFormat
+			? RecoveryOutputFormat ?? new SafeIlRecoveryOutputFormat()
 			: DefaultOutputFormat;
 
+		if (outputFormat is SafeIlRecoveryOutputFormat)
+		{
+			Logger.SendStatusChange("loading_step_generate_dummy_dll");
+			Logger.Info(LogCategory.Import, "Script Content Level 3: recovering Il2Cpp method bodies (experimental).");
+		}
 		List<AssemblyDefinition> assemblies = outputFormat.BuildAssemblies(context);
+		(outputFormat as SafeIlRecoveryOutputFormat)?.LogSummary();
 
 		foreach (AssemblyDefinition assembly in assemblies)
 		{
