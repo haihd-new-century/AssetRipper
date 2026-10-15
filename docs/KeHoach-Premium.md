@@ -98,6 +98,6 @@ Nguồn yêu cầu: `docs/Premium Edition.txt` (7 tính năng). Sau khi hoàn th
 | 6 | User-Defined Package Export | `36e8dfcf8` | DLL và script của package không bị xuất; scene trỏ tới GUID script của package; manifest có package |
 | 7 | Asset Deduplication | `c6beb7724` | 2 bundle cùng mesh → 1 file |
 | – | Đổi Free → Freemium | `4730e0469` | Tiêu đề và brand hiển thị "AssetRipper Freemium"; Settings không còn mục nào bị khoá |
-| – | Explorer 2 khung cho GameBundle | `9a0e76830` | Chrome thật: 60 nút cây, 58 ô, 630 asset trong collection, xem trước 384×384, 0 lỗi JS |
+| – | Trang GameBundle dạng lưới thẻ (thay Explorer 2 khung ở `9a0e76830`) | (commit này) | Chrome thật: 58 thẻ, 52 ảnh bìa, lọc tên/loại, bấm mở collection, 0 lỗi JS |
 
 Toàn bộ test: **644/644** đạt.

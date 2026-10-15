@@ -164,7 +164,7 @@ dotnet build Source/AssetRipper.CLI -c Release</code></pre>
 <p>Chạy <code>AssetRipper.GUI.Free</code>, hoặc <code>--headless --port 8080</code> để không tự mở trình duyệt. Giao diện mới dùng theme tối với thanh điều hướng cố định ở đầu trang.</p>
 <div class="grid">
 	<div class="card"><h4>🏠 Trang chủ / Dashboard</h4><p class="muted">Khi chưa nạp game: hiện nút mở thư mục hoặc file. Khi đã nạp: hiện nền tảng, scripting backend, phiên bản Unity, số asset, collection, loại asset, số asset không đọc được, và biểu đồ phân bố theo nhóm asset. Có nút đi tới trình duyệt asset và nút export.</p></div>
-	<div class="card"><h4>🧭 Explorer (trang GameBundle)</h4><p class="muted">Giao diện 2 khung giống File Explorer. Khung trái là cây thư mục: bundle, bundle con, collection kèm số asset, resource và file lỗi; có ô lọc cây. Khung phải gồm breadcrumb, các ô thư mục khi chọn bundle, hoặc danh sách asset khi chọn collection (dạng Icons hoặc Details, có lọc tên/class, phân trang 300 mục, thumbnail tải lười), cùng panel xem trước bên phải. Bấm một lần để xem trước, bấm đúp hoặc Enter để mở trang asset, dùng phím mũi tên để di chuyển. Trạng thái nằm trên URL hash nên Back/Forward và Reload đều hoạt động. Kiểm chứng bằng Chrome: 60 nút cây, 630 asset, ảnh xem trước 384×384, 0 lỗi JS.</p></div>
+	<div class="card"><h4>📁 Trang GameBundle (lưới)</h4><p class="muted">Mỗi bundle con, collection, scene, resource và file lỗi là một thẻ trong lưới, giống trang collection. Collection có ảnh thì dùng thumbnail ảnh đầu tiên làm ảnh bìa (tải khi cuộn tới). Đầu trang có breadcrumb và thống kê (bundle, collection, asset, resource, file lỗi); có ô lọc theo tên và bộ lọc theo loại. Bấm thẻ để mở. Kiểm chứng bằng Chrome: 58 thẻ, 52 ảnh bìa, bộ lọc chạy đúng, bấm mở collection, 0 lỗi JS. (Giao diện Explorer 2 khung trước đó đã được thay bằng giao diện này.)</p></div>
 	<div class="card"><h4>🗂️ Trình duyệt collection</h4><p class="muted">Lưới thẻ có thumbnail cho texture, sprite và terrain. Mỗi nhóm asset có màu riêng và một dòng thông tin, ví dụ <em>1024×1024 · ASTC_6x6</em> hay <em>824 vertices · 1 submesh</em>. Có thể lọc tức thì theo tên, class hoặc path ID (phím <kbd>/</kbd> để focus ô lọc), chuyển giữa dạng Lưới và Bảng (lựa chọn được ghi nhớ), và trang hiện 240 mục mỗi lần.</p></div>
 	<div class="card"><h4>🔎 Trang asset</h4><p class="muted">Phần đầu trang có ảnh xem trước 256 px (bấm để mở ảnh gốc) và các thông tin collection, path ID, chi tiết, đường dẫn gốc. Bên dưới là các tab có sẵn: Information, Image, Audio, Model, Text, YAML, JSON, Hex, Dependencies.</p></div>
 	<div class="card"><h4>⚙️ Cài đặt &amp; Configuration Files</h4><p class="muted">Các ô <em>Static Mesh Separation</em> và <em>Asset Deduplication</em> đã được mở khoá. Trang Configuration Files có thêm hai singleton mới là <code>ExportFilter</code> và <code>AssetPathOverrides</code>, chỉnh trực tiếp dưới dạng JSON.</p></div>
@@ -418,7 +418,8 @@ dotnet Source/0Bins/AssetRipper.CLI/Debug/AssetRipper.CLI.dll export game.apk -o
 	<tr><td><code>fa6ee1c1e</code></td><td>Prefab Outlining</td></tr>
 	<tr><td><code>4730e0469</code></td><td>Đổi tên Free → Freemium, mở khoá các tuỳ chọn</td></tr>
 	<tr><td><code>e35afea7e</code></td><td>Tài liệu: kết quả kế hoạch Premium, Freemium</td></tr>
-	<tr><td>(commit này)</td><td>Prefab Outlining giai đoạn 2: liên kết instance trong scene với prefab</td></tr>
+	<tr><td><code>8b2ed819d</code></td><td>Prefab Outlining giai đoạn 2: liên kết instance trong scene với prefab</td></tr>
+	<tr><td>(commit này)</td><td>Trang GameBundle chuyển từ Explorer sang lưới thẻ</td></tr>
 </table>
 </section>
 
