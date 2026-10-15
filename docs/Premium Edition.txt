@@ -1,0 +1,8 @@
+Premium Edition
+• Shader Decompilation: Giải mã và phục hồi shader tốt hơn.
+• Static Mesh Separation: Tách rời các mesh tĩnh.
+• Prefab Outlining: Phác thảo và khôi phục cấu trúc Prefab.
+• Il2Cpp Analysis: Hỗ trợ phân tích mã nguồn nâng cao qua Il2Cpp.
+• Asset Path Overrides: Ghi đè đường dẫn tài sản.
+• User-Defined Package Export: Tùy chỉnh xuất gói theo yêu cầu.
+• Asset Deduplication: Khử trùng lặp tài sản để tối ưu hóa dự án
